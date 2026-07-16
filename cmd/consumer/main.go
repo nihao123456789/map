@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"map-server/internal/config"
-	"map-server/internal/model"
+	mysqlModel "map-server/internal/model/mysql/map_server"
 	"map-server/internal/svc"
 
 	"github.com/zeromicro/go-zero/core/conf"
@@ -185,7 +185,7 @@ func handleMessage(ctx context.Context, svcCtx *svc.ServiceContext, msgValue str
 	if dbErr != nil {
 		logx.Errorf("[Consumer] [同步失败] 同步 PostGIS 失败（已达最大重试次数）: type=%s, action=%s, 错误=%v", msg.Type, msg.Action, dbErr)
 		// 记录失败日志到 MySQL
-		errLog := &model.SyncFailureLog{
+		errLog := &mysqlModel.SyncFailureLog{
 			DataType: msg.Type,
 			Action:   msg.Action,
 			Payload:  string(msg.Payload),

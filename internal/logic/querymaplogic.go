@@ -13,7 +13,7 @@ import (
 
 	"github.com/zeromicro/go-zero/core/logx"
 
-	"map-server/internal/model"
+	mysqlModel "map-server/internal/model/mysql/map_server"
 	"map-server/internal/svc"
 	"map-server/internal/types"
 	"map-server/pkg/geoutil"
@@ -210,7 +210,7 @@ func parseIdsAndDistMap(results []geoutil.GeoResult) ([]int64, map[int64]float64
 //   - distMap：堆场 ID -> 距离（千米）的映射表
 //
 // 返回：YardInfo 列表。
-func buildYardInfoList(yards []*model.Yard, distMap map[int64]float64) []types.YardInfo {
+func buildYardInfoList(yards []*mysqlModel.Yard, distMap map[int64]float64) []types.YardInfo {
 	list := make([]types.YardInfo, 0, len(yards))
 	for _, y := range yards {
 		list = append(list, types.YardInfo{
@@ -232,7 +232,7 @@ func buildYardInfoList(yards []*model.Yard, distMap map[int64]float64) []types.Y
 //   - distMap：集装箱 ID -> 距离（千米）的映射表
 //
 // 返回：ContainerInfo 列表。
-func buildContainerInfoList(containers []*model.Container, distMap map[int64]float64) []types.ContainerInfo {
+func buildContainerInfoList(containers []*mysqlModel.Container, distMap map[int64]float64) []types.ContainerInfo {
 	list := make([]types.ContainerInfo, 0, len(containers))
 	for _, c := range containers {
 		list = append(list, types.ContainerInfo{

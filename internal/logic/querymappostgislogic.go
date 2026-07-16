@@ -13,7 +13,7 @@ import (
 
 	"github.com/zeromicro/go-zero/core/logx"
 
-	"map-server/internal/model"
+	postgisModel "map-server/internal/model/postgis/map_server"
 	"map-server/internal/svc"
 	"map-server/internal/types"
 )
@@ -76,11 +76,11 @@ func (l *QueryMapPostGISLogic) queryByBBox(req *types.MapQueryReq) (*types.MapQu
 	// 并发查询堆场和集装箱（两张表独立查询，可并行）
 	// 通过 channel 收集结果
 	type yardResult struct {
-		yards []*model.PostGISYard
+		yards []*postgisModel.PostGISYard
 		err   error
 	}
 	type containerResult struct {
-		containers []*model.PostGISContainer
+		containers []*postgisModel.PostGISContainer
 		err        error
 	}
 
@@ -130,11 +130,11 @@ func (l *QueryMapPostGISLogic) queryByBBox(req *types.MapQueryReq) (*types.MapQu
 // 调用 PostGIS ST_DWithin（GEOGRAPHY 类型，球面精确距离）实现。
 func (l *QueryMapPostGISLogic) queryByRadius(req *types.MapQueryReq) (*types.MapQueryResp, error) {
 	type yardResult struct {
-		yards []*model.PostGISYard
+		yards []*postgisModel.PostGISYard
 		err   error
 	}
 	type containerResult struct {
-		containers []*model.PostGISContainer
+		containers []*postgisModel.PostGISContainer
 		err        error
 	}
 
@@ -184,7 +184,7 @@ func (l *QueryMapPostGISLogic) queryByRadius(req *types.MapQueryReq) (*types.Map
 //   - containers：PostGIS 集装箱查询结果
 //
 // 返回：MapQueryResp 响应结构体。
-func buildPostGISResp(yards []*model.PostGISYard, containers []*model.PostGISContainer) *types.MapQueryResp {
+func buildPostGISResp(yards []*postgisModel.PostGISYard, containers []*postgisModel.PostGISContainer) *types.MapQueryResp {
 	// 组装堆场列表
 	yardInfos := make([]types.YardInfo, 0, len(yards))
 	for _, y := range yards {

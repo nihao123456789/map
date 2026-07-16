@@ -15,7 +15,8 @@ import (
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 
 	"map-server/internal/config"
-	"map-server/internal/model"
+	mysqlModel "map-server/internal/model/mysql/map_server"
+	postgisModel "map-server/internal/model/postgis/map_server"
 	"map-server/pkg/geoutil"
 )
 
@@ -37,13 +38,13 @@ type ServiceContext struct {
 	GeoClient *geoutil.GeoClient
 
 	// YardModel 提供 MySQL 堆场表的数据访问
-	YardModel *model.YardModel
+	YardModel *mysqlModel.YardModel
 
 	// ContainerModel 提供 MySQL 集装箱表的数据访问
-	ContainerModel *model.ContainerModel
+	ContainerModel *mysqlModel.ContainerModel
 
 	// SyncFailureLogModel 提供 MySQL 同步失败日志表的数据访问
-	SyncFailureLogModel *model.SyncFailureLogModel
+	SyncFailureLogModel *mysqlModel.SyncFailureLogModel
 
 	// ==================== PostgreSQL + PostGIS 相关 ====================
 
@@ -51,10 +52,10 @@ type ServiceContext struct {
 	PgPool *pgxpool.Pool
 
 	// PostGISYardModel 提供 PostgreSQL 堆场空间查询（BBox/Radius）
-	PostGISYardModel *model.PostGISYardModel
+	PostGISYardModel *postgisModel.PostGISYardModel
 
 	// PostGISContainerModel 提供 PostgreSQL 集装箱空间查询（BBox/Radius）
-	PostGISContainerModel *model.PostGISContainerModel
+	PostGISContainerModel *postgisModel.PostGISContainerModel
 }
 
 // NewServiceContext 初始化并返回 ServiceContext。
@@ -93,9 +94,9 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	// -----------------------------------------------------------
 	// 初始化 MySQL Model
 	// -----------------------------------------------------------
-	yardModel := model.NewYardModel(db)
-	containerModel := model.NewContainerModel(db)
-	syncFailureLogModel := model.NewSyncFailureLogModel(db)
+	yardModel := mysqlModel.NewYardModel(db)
+	containerModel := mysqlModel.NewContainerModel(db)
+	syncFailureLogModel := mysqlModel.NewSyncFailureLogModel(db)
 
 	// -----------------------------------------------------------
 	// 初始化 PostgreSQL 连接池（pgxpool）
@@ -130,8 +131,8 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	// -----------------------------------------------------------
 	// 初始化 PostGIS Model
 	// -----------------------------------------------------------
-	postGISYardModel := model.NewPostGISYardModel(pgPool)
-	postGISContainerModel := model.NewPostGISContainerModel(pgPool)
+	postGISYardModel := postgisModel.NewPostGISYardModel(pgPool)
+	postGISContainerModel := postgisModel.NewPostGISContainerModel(pgPool)
 
 	return &ServiceContext{
 		Config:                c,
