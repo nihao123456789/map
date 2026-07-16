@@ -1,16 +1,16 @@
-// main 是后台 Redis 消息队列消费者脚本的入口程序。
+// Package main 是后台 Redis 消息队列消费者脚本的入口程序。
 // 用于从 Redis 阻塞队列消费堆场和集装箱的同步消息，并将地理空间数据同步写入 PostgreSQL (PostGIS)。
 //
 // 启动方式：
 //
 //	# 默认开发环境
-//	go run cmd/consumer/main.go -f etc/mapserver-dev.yaml
+//	go run cmd/consumer/redis_consumer.go -f etc/mapserver-dev.yaml
 //
 //	# 测试环境
-//	go run cmd/consumer/main.go -f etc/mapserver-test.yaml
+//	go run cmd/consumer/redis_consumer.go -f etc/mapserver-test.yaml
 //
 //	# 生产环境
-//	go run cmd/consumer/main.go -f etc/mapserver-prod.yaml
+//	go run cmd/consumer/redis_consumer.go -f etc/mapserver-prod.yaml
 package main
 
 import (
@@ -32,8 +32,8 @@ import (
 // configFile 指定配置文件路径，默认为 etc/mapserver-dev.yaml，可由 -f 参数覆盖
 var configFile = flag.String("f", "etc/mapserver-dev.yaml", "配置文件路径")
 
-// 队列 Key 定义
-const queueKey = "queue:spatial_sync"
+// redisQueueKey 定义 Redis 队列 Key
+const redisQueueKey = "queue:spatial_sync"
 
 // SyncMessage 队列消息的统一外层结构
 type SyncMessage struct {
@@ -80,26 +80,26 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	logx.Infof("[Consumer] 消费者服务启动成功，正在监听 Redis 队列: %s...", queueKey)
+	logx.Infof("[Redis-Consumer] 消费者服务启动成功，正在监听 Redis 队列: %s...", redisQueueKey)
 
 	// 消费循环
 	for {
 		select {
 		case <-ctx.Done():
-			logx.Info("[Consumer] 收到退出信号，正在安全终止消费者服务...")
+			logx.Info("[Redis-Consumer] 收到退出信号，正在安全终止消费者服务...")
 			return
 		default:
 			// 从 Redis List 队列中阻塞读取消息
 			// BLPop 第二个参数设为 0 表示无限期阻塞，直到有消息或 Context 被取消
-			res, err := svcCtx.RedisClient.BLPop(ctx, 0, queueKey).Result()
+			res, err := svcCtx.RedisClient.BLPop(ctx, 0, redisQueueKey).Result()
 			if err != nil {
 				// 若 Context 已经取消，则直接退出
 				if ctx.Err() != nil {
-					logx.Info("[Consumer] 消费者服务已平滑退出。")
+					logx.Info("[Redis-Consumer] 消费者服务已平滑退出。")
 					return
 				}
 				// 打印错误日志，休眠 2 秒后继续重试（避免 Redis 连接异常时出现 CPU 满载）
-				logx.Errorf("[Consumer] 从 Redis 队列 BLPop 失败: %v，将在 2 秒后重试", err)
+				logx.Errorf("[Redis-Consumer] 从 Redis 队列 BLPop 失败: %v，将在 2 秒后重试", err)
 				time.Sleep(2 * time.Second)
 				continue
 			}
@@ -111,29 +111,29 @@ func main() {
 			msgValue := res[1]
 
 			// 在独立的协程或函数中处理消息，提高主循环的响应速度与健壮性
-			handleMessage(ctx, svcCtx, msgValue)
+			handleRedisMessage(ctx, svcCtx, msgValue)
 		}
 	}
 }
 
-// handleMessage 解析单条队列消息并执行相应的 PostGIS 同步操作
-func handleMessage(ctx context.Context, svcCtx *svc.ServiceContext, msgValue string) {
-	logx.Infof("[Consumer] 接收到消息: %s", msgValue)
+// handleRedisMessage 解析单条 Redis 队列消息并执行相应的 PostGIS 同步操作
+func handleRedisMessage(ctx context.Context, svcCtx *svc.ServiceContext, msgValue string) {
+	logx.Infof("[Redis-Consumer] 接收到消息: %s", msgValue)
 
 	// 1. 解析外层通用消息结构
 	var msg SyncMessage
 	if err := json.Unmarshal([]byte(msgValue), &msg); err != nil {
-		logx.Errorf("[Consumer] 消息解析 JSON 失败: %v, 丢弃非法消息", err)
+		logx.Errorf("[Redis-Consumer] 消息解析 JSON 失败: %v, 丢弃非法消息", err)
 		return
 	}
 
 	// 验证消息合法性
 	if msg.Type != "yard" && msg.Type != "container" {
-		logx.Errorf("[Consumer] 消息类型错误: %s, 丢弃消息", msg.Type)
+		logx.Errorf("[Redis-Consumer] 消息类型错误: %s, 丢弃消息", msg.Type)
 		return
 	}
 	if msg.Action != "upsert" && msg.Action != "delete" {
-		logx.Errorf("[Consumer] 消息动作错误: %s, 丢弃消息", msg.Action)
+		logx.Errorf("[Redis-Consumer] 消息动作错误: %s, 丢弃消息", msg.Action)
 		return
 	}
 
@@ -143,7 +143,7 @@ func handleMessage(ctx context.Context, svcCtx *svc.ServiceContext, msgValue str
 	// 2. 执行数据库写入，支持最多 3 次重试机制
 	for retry := 1; retry <= maxRetries; retry++ {
 		if retry > 1 {
-			logx.Errorf("[Consumer] 写入 PostgreSQL 失败，正在进行第 %d/%d 次重试...", retry, maxRetries)
+			logx.Errorf("[Redis-Consumer] 写入 PostgreSQL 失败，正在进行第 %d/%d 次重试...", retry, maxRetries)
 			time.Sleep(200 * time.Millisecond) // 重试退避延时
 		}
 
@@ -151,7 +151,7 @@ func handleMessage(ctx context.Context, svcCtx *svc.ServiceContext, msgValue str
 		case "yard":
 			var yp YardPayload
 			if err := json.Unmarshal(msg.Payload, &yp); err != nil {
-				logx.Errorf("[Consumer] 堆场载荷解析 JSON 失败: %v, 丢弃消息", err)
+				logx.Errorf("[Redis-Consumer] 堆场载荷解析 JSON 失败: %v, 丢弃消息", err)
 				return
 			}
 
@@ -164,7 +164,7 @@ func handleMessage(ctx context.Context, svcCtx *svc.ServiceContext, msgValue str
 		case "container":
 			var cp ContainerPayload
 			if err := json.Unmarshal(msg.Payload, &cp); err != nil {
-				logx.Errorf("[Consumer] 集装箱载荷解析 JSON 失败: %v, 丢弃消息", err)
+				logx.Errorf("[Redis-Consumer] 集装箱载荷解析 JSON 失败: %v, 丢弃消息", err)
 				return
 			}
 
@@ -183,7 +183,7 @@ func handleMessage(ctx context.Context, svcCtx *svc.ServiceContext, msgValue str
 
 	// 3. 统计最终同步状态
 	if dbErr != nil {
-		logx.Errorf("[Consumer] [同步失败] 同步 PostGIS 失败（已达最大重试次数）: type=%s, action=%s, 错误=%v", msg.Type, msg.Action, dbErr)
+		logx.Errorf("[Redis-Consumer] [同步失败] 同步 PostGIS 失败（已达最大重试次数）: type=%s, action=%s, 错误=%v", msg.Type, msg.Action, dbErr)
 		// 记录失败日志到 MySQL
 		errLog := &mysqlModel.SyncFailureLog{
 			DataType: msg.Type,
@@ -193,9 +193,9 @@ func handleMessage(ctx context.Context, svcCtx *svc.ServiceContext, msgValue str
 			Status:   1, // 1=未处理
 		}
 		if insertErr := svcCtx.SyncFailureLogModel.Insert(ctx, errLog); insertErr != nil {
-			logx.Errorf("[Consumer] [记录日志失败] 无法将同步失败日志写入数据库: %v", insertErr)
+			logx.Errorf("[Redis-Consumer] [记录日志失败] 无法将同步失败日志写入数据库: %v", insertErr)
 		}
 	} else {
-		logx.Infof("[Consumer] [同步成功] 成功同步 PostGIS 数据库: type=%s, action=%s", msg.Type, msg.Action)
+		logx.Infof("[Redis-Consumer] [同步成功] 成功同步 PostGIS 数据库: type=%s, action=%s", msg.Type, msg.Action)
 	}
 }
