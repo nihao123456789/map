@@ -22,7 +22,7 @@ type Container struct {
 	Longitude float64 `db:"longitude"`
 	// Latitude 纬度
 	Latitude float64 `db:"latitude"`
-	// Status 状态：1=在场，0=离场
+	// Status 状态：1=在场，2=离场
 	Status int8 `db:"status"`
 }
 
