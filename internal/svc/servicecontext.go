@@ -17,7 +17,6 @@ import (
 	"map-server/internal/config"
 	mysqlModel "map-server/internal/model/mysql/map_server"
 	postgisModel "map-server/internal/model/postgis/map_server"
-	"map-server/pkg/geoutil"
 )
 
 // ServiceContext 是服务的全局上下文，持有所有依赖的客户端实例。
@@ -33,9 +32,6 @@ type ServiceContext struct {
 
 	// RedisClient 是原生的 go-redis 客户端，用于执行 GEO 等高级命令
 	RedisClient *redis.Client
-
-	// GeoClient 是封装了 Redis GEO 操作的工具类实例
-	GeoClient *geoutil.GeoClient
 
 	// YardModel 提供 MySQL 堆场表的数据访问
 	YardModel *mysqlModel.YardModel
@@ -87,11 +83,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	fmt.Println("Redis 连接初始化完成")
 
 	// -----------------------------------------------------------
-	// 初始化 Redis-Geo 工具类
-	// -----------------------------------------------------------
-	geoClient := geoutil.NewGeoClient(redisClient)
-
-	// -----------------------------------------------------------
 	// 初始化 MySQL Model
 	// -----------------------------------------------------------
 	yardModel := mysqlModel.NewYardModel(db)
@@ -138,7 +129,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		Config:                c,
 		DB:                    db,
 		RedisClient:           redisClient,
-		GeoClient:             geoClient,
 		YardModel:             yardModel,
 		ContainerModel:        containerModel,
 		PgPool:                pgPool,

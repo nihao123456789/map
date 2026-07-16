@@ -66,10 +66,6 @@ type (
 
 // 定义地图查询服务
 service mapserver {
-	// 基于 Redis-GEO 的范围查询接口（高性能，有 Geohash 近似误差）
-	@handler QueryMapHandler
-	get /api/map/query (MapQueryReq) returns (MapQueryResp)
-
 	// 基于 PostgreSQL+PostGIS 的精确空间查询接口（高精度，支持视口/圆形查询）
 	@handler QueryMapPostGISHandler
 	get /api/map/query/postgis (MapQueryReq) returns (MapQueryResp)
