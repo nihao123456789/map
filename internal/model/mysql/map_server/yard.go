@@ -22,7 +22,7 @@ type Yard struct {
 	Latitude float64 `db:"latitude"`
 	// Address 详细地址
 	Address string `db:"address"`
-	// Status 状态：1=启用，0=禁用
+	// Status 状态：1=启用，2=禁用
 	Status int8 `db:"status"`
 }
 
