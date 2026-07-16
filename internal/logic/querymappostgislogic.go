@@ -87,29 +87,48 @@ func (l *QueryMapPostGISLogic) queryByBBox(req *types.MapQueryReq) (*types.MapQu
 	yardCh := make(chan yardResult, 1)
 	containerCh := make(chan containerResult, 1)
 
-	// 异步查询堆场
-	go func() {
+	// 异步查询堆场（采用显式形参传递，减少外部变量闭包逃逸）
+	go func(ctx context.Context, r *types.MapQueryReq) {
 		yards, err := l.svcCtx.PostGISYardModel.FindByBBox(
-			l.ctx,
-			req.Longitude, req.Latitude,
-			req.MinLon, req.MaxLon, req.MinLat, req.MaxLat,
+			ctx,
+			r.Longitude, r.Latitude,
+			r.MinLon, r.MaxLon, r.MinLat, r.MaxLat,
 		)
 		yardCh <- yardResult{yards: yards, err: err}
-	}()
+	}(l.ctx, req)
 
-	// 异步查询集装箱
-	go func() {
+	// 异步查询集装箱（采用显式形参传递，减少外部变量闭包逃逸）
+	go func(ctx context.Context, r *types.MapQueryReq) {
 		containers, err := l.svcCtx.PostGISContainerModel.FindByBBox(
-			l.ctx,
-			req.Longitude, req.Latitude,
-			req.MinLon, req.MaxLon, req.MinLat, req.MaxLat,
+			ctx,
+			r.Longitude, r.Latitude,
+			r.MinLon, r.MaxLon, r.MinLat, r.MaxLat,
 		)
 		containerCh <- containerResult{containers: containers, err: err}
-	}()
+	}(l.ctx, req)
 
-	// 等待两个查询结果
-	yr := <-yardCh
-	cr := <-containerCh
+	// 等待两个查询结果，利用 select 多路复用配合 ctx.Done()，保证接口在超时或取消时能即刻响应返回，防止挂死
+	var yr yardResult
+	var cr containerResult
+
+	select {
+	case <-l.ctx.Done():
+		return nil, l.ctx.Err()
+	case yr = <-yardCh:
+		// 堆场查询结果已就绪，继续等待集装箱或超时
+		select {
+		case <-l.ctx.Done():
+			return nil, l.ctx.Err()
+		case cr = <-containerCh:
+		}
+	case cr = <-containerCh:
+		// 集装箱查询结果已就绪，继续等待堆场或超时
+		select {
+		case <-l.ctx.Done():
+			return nil, l.ctx.Err()
+		case yr = <-yardCh:
+		}
+	}
 
 	if yr.err != nil {
 		l.Logger.Errorf("[PostGIS] BBox 查询堆场失败: %v", yr.err)
@@ -141,26 +160,46 @@ func (l *QueryMapPostGISLogic) queryByRadius(req *types.MapQueryReq) (*types.Map
 	yardCh := make(chan yardResult, 1)
 	containerCh := make(chan containerResult, 1)
 
-	// 异步查询堆场
-	go func() {
+	// 异步查询堆场（采用显式形参传递，减少外部变量闭包逃逸）
+	go func(ctx context.Context, r *types.MapQueryReq) {
 		yards, err := l.svcCtx.PostGISYardModel.FindByRadius(
-			l.ctx,
-			req.Longitude, req.Latitude, req.Radius,
+			ctx,
+			r.Longitude, r.Latitude, r.Radius,
 		)
 		yardCh <- yardResult{yards: yards, err: err}
-	}()
+	}(l.ctx, req)
 
-	// 异步查询集装箱
-	go func() {
+	// 异步查询集装箱（采用显式形参传递，减少外部变量闭包逃逸）
+	go func(ctx context.Context, r *types.MapQueryReq) {
 		containers, err := l.svcCtx.PostGISContainerModel.FindByRadius(
-			l.ctx,
-			req.Longitude, req.Latitude, req.Radius,
+			ctx,
+			r.Longitude, r.Latitude, r.Radius,
 		)
 		containerCh <- containerResult{containers: containers, err: err}
-	}()
+	}(l.ctx, req)
 
-	yr := <-yardCh
-	cr := <-containerCh
+	// 等待两个查询结果，利用 select 多路复用配合 ctx.Done()，保证接口在超时或取消时能即刻响应返回，防止挂死
+	var yr yardResult
+	var cr containerResult
+
+	select {
+	case <-l.ctx.Done():
+		return nil, l.ctx.Err()
+	case yr = <-yardCh:
+		// 堆场查询结果已就绪，继续等待集装箱或超时
+		select {
+		case <-l.ctx.Done():
+			return nil, l.ctx.Err()
+		case cr = <-containerCh:
+		}
+	case cr = <-containerCh:
+		// 集装箱查询结果已就绪，继续等待堆场或超时
+		select {
+		case <-l.ctx.Done():
+			return nil, l.ctx.Err()
+		case yr = <-yardCh:
+		}
+	}
 
 	if yr.err != nil {
 		l.Logger.Errorf("[PostGIS] Radius 查询堆场失败: %v", yr.err)
