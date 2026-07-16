@@ -1,0 +1,29 @@
+# 地图服务配置文件
+Name: mapserver
+Host: 0.0.0.0
+Port: 8080
+
+# MySQL 数据库配置（业务数据存储）
+MySQL:
+  DataSource: "root:123456@tcp(127.0.0.1:3306)/map_server?charset=utf8mb4&parseTime=true&loc=Local"
+
+# Redis 配置（Redis-GEO 空间缓存）
+Redis:
+  - Host: "127.0.0.1:6379"
+    Type: node
+    # Pass: ""     # 如果 Redis 有密码，取消此行注释并填写密码
+
+# PostgreSQL+PostGIS 配置（精确空间查询）
+# 连接字符串格式：host=主机 port=端口 user=用户名 password=密码 dbname=数据库名 sslmode=disable
+PostgreSQL:
+  DataSource: "host=127.0.0.1 port=5432 user=postgres password=Admin@123 dbname=map_server sslmode=disable"
+  # 连接池最大连接数（根据业务并发量调整）
+  MaxConns: 10
+
+# 日志配置（开发环境）
+Log:
+  Mode: file             # 输出模式：file=落地文件，console=仅控制台
+  Path: logs/dev         # 日志文件存储路径
+  Level: info            # 记录等级
+  KeepDays: 7            # 历史日志保留天数
+  Compress: true         # 历史日志是否压缩成 gzip 包

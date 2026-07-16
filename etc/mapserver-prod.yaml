@@ -1,0 +1,29 @@
+# 地图服务配置文件 - 生产环境
+Name: mapserver-prod
+Host: 0.0.0.0
+Port: 8080
+
+# MySQL 数据库配置（生产环境业务数据存储）
+MySQL:
+  DataSource: "prod_user:ProdPassword@tcp(prod-mysql-host:3306)/map_server_prod?charset=utf8mb4&parseTime=true&loc=Local"
+
+# Redis 配置（生产环境 Redis-GEO 空间缓存）
+Redis:
+  - Host: "prod-redis-host:6379"
+    Type: node
+    # Pass: "ProdRedisPassword" # 生产环境 Redis 密码，若无密码请注释或留空
+
+# PostgreSQL+PostGIS 配置（生产环境精确空间查询）
+# 连接字符串格式：host=主机 port=端口 user=用户名 password=密码 dbname=数据库名 sslmode=disable
+PostgreSQL:
+  DataSource: "host=prod-pgsql-host port=5432 user=prod_user password=ProdPassword dbname=map_server_prod sslmode=disable"
+  # 连接池最大连接数（生产环境并发量高，连接池调大）
+  MaxConns: 100
+
+# 日志配置（生产环境）
+Log:
+  Mode: file             # 输出模式：file=落地文件，console=仅控制台
+  Path: logs/prod        # 日志文件存储路径
+  Level: info            # 记录等级
+  KeepDays: 30           # 历史日志保留天数
+  Compress: true         # 历史日志是否压缩成 gzip 包

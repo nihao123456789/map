@@ -1,0 +1,77 @@
+// API 语法版本
+syntax = "v1"
+
+// 接口元信息
+info (
+	title:  "MapServer"
+	desc:   "地图空间查询服务 API 定义"
+	author: "map-server"
+	email:  ""
+)
+
+type (
+	// MapQueryReq 地图空间范围查询请求参数
+	MapQueryReq {
+		// 中心点经度 (WGS84 坐标系)，必填
+		Longitude float64 `form:"longitude"`
+		// 中心点纬度 (WGS84 坐标系)，必填
+		Latitude float64 `form:"latitude"`
+		// 查询半径，单位：千米 (km)，圆形查询时必填
+		Radius float64 `form:"radius"`
+		// 矩形视口最小经度，用于 PostGIS 矩形视口查询，可选
+		MinLon float64 `form:"minLon,optional"`
+		// 矩形视口最大经度，用于 PostGIS 矩形视口查询，可选
+		MaxLon float64 `form:"maxLon,optional"`
+		// 矩形视口最小纬度，用于 PostGIS 矩形视口查询，可选
+		MinLat float64 `form:"minLat,optional"`
+		// 矩形视口最大纬度，用于 PostGIS 矩形视口查询，可选
+		MaxLat float64 `form:"maxLat,optional"`
+	}
+	// YardInfo 堆场查询结果详情
+	YardInfo {
+		// 堆场唯一标识 ID
+		Id int64 `json:"id"`
+		// 堆场名称
+		Name string `json:"name"`
+		// 堆场经度
+		Longitude float64 `json:"longitude"`
+		// 堆场纬度
+		Latitude float64 `json:"latitude"`
+		// 堆场距离中心点的距离，单位：千米 (km)
+		Distance float64 `json:"distance"`
+	}
+	// ContainerInfo 集装箱查询结果详情
+	ContainerInfo {
+		// 集装箱唯一标识 ID
+		Id int64 `json:"id"`
+		// 集装箱箱号 (唯一)
+		Number string `json:"number"`
+		// 所属堆场 ID
+		YardId int64 `json:"yardId"`
+		// 集装箱经度
+		Longitude float64 `json:"longitude"`
+		// 集装箱纬度
+		Latitude float64 `json:"latitude"`
+		// 集装箱距离中心点的距离，单位：千米 (km)
+		Distance float64 `json:"distance"`
+	}
+	// MapQueryResp 地图空间查询响应结果
+	MapQueryResp {
+		// 范围内的堆场列表
+		Yards []YardInfo `json:"yards"`
+		// 范围内的集装箱列表
+		Containers []ContainerInfo `json:"containers"`
+	}
+)
+
+// 定义地图查询服务
+service mapserver {
+	// 基于 Redis-GEO 的范围查询接口（高性能，有 Geohash 近似误差）
+	@handler QueryMapHandler
+	get /api/map/query (MapQueryReq) returns (MapQueryResp)
+
+	// 基于 PostgreSQL+PostGIS 的精确空间查询接口（高精度，支持视口/圆形查询）
+	@handler QueryMapPostGISHandler
+	get /api/map/query/postgis (MapQueryReq) returns (MapQueryResp)
+}
+

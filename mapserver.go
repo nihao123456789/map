@@ -1,0 +1,63 @@
+// Code scaffolded by goctl. Safe to edit.
+// goctl 1.10.1
+
+// main 是 map-server 地图服务的入口程序。
+//
+// 启动方式：
+//
+//	# 默认开发环境
+//	go run mapserver.go -f etc/mapserver-dev.yaml
+//
+//	# 测试环境
+//	go run mapserver.go -f etc/mapserver-test.yaml
+//
+//	# 生产环境
+//	go run mapserver.go -f etc/mapserver-prod.yaml
+//
+// 或编译后执行：
+//
+//	./mapserver -f etc/mapserver-dev.yaml
+package main
+
+import (
+	"flag"
+	"fmt"
+
+	"map-server/internal/config"
+	"map-server/internal/handler"
+	"map-server/internal/svc"
+
+	"github.com/zeromicro/go-zero/core/conf"
+	"github.com/zeromicro/go-zero/rest"
+)
+
+// configFile 指定配置文件路径，默认为 etc/mapserver-dev.yaml，
+// 可通过命令行参数 -f 覆盖。
+var configFile = flag.String("f", "etc/mapserver-dev.yaml", "配置文件路径")
+
+func main() {
+	// 解析命令行参数
+	flag.Parse()
+
+	// 从配置文件加载服务配置（加载失败时直接 panic 终止）
+	var c config.Config
+	conf.MustLoad(*configFile, &c)
+
+	// 初始化 go-zero HTTP 服务器（加载失败时直接 panic 终止）
+	server := rest.MustNewServer(c.RestConf)
+	defer server.Stop()
+
+	// 初始化服务上下文（包含 MySQL、Redis 连接等所有依赖）
+	ctx := svc.NewServiceContext(c)
+
+	// 注册所有 HTTP 路由处理器
+	handler.RegisterHandlers(server, ctx)
+
+	// 打印启动信息
+	fmt.Printf("地图服务启动成功，监听地址：%s:%d\n", c.Host, c.Port)
+	fmt.Println("接口列表：")
+	fmt.Println("  GET  /api/map/query  - 根据经纬度范围查询堆场和集装箱")
+
+	// 启动 HTTP 服务，阻塞直到收到退出信号
+	server.Start()
+}
