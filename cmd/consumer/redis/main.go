@@ -90,13 +90,13 @@ func main() {
 
 			// 使用协程并发处理消息，提高主循环的响应速度与高并发吞吐能力
 			wg.Add(1)
-			go func(msg string) {
+			// 在外层提前创建好超时 context 和其 cancel 函数，并一同显式作为形参传入协程，减小隐式闭包捕获造成的变量逃逸
+			taskCtx, taskCancel := context.WithTimeout(context.Background(), 10*time.Second)
+			go func(ctx context.Context, cancel context.CancelFunc, sc *svc.ServiceContext, msg string) {
 				defer wg.Done()
-				// 创建独立的 10 秒超时任务上下文，不受系统退出信号撤销的影响，确保数据库写入及日志持久化必定能正常执行完
-				taskCtx, taskCancel := context.WithTimeout(context.Background(), 10*time.Second)
-				defer taskCancel()
-				handleSpatialSyncMessage(taskCtx, svcCtx, msg)
-			}(msgValue)
+				defer cancel()
+				handleSpatialSyncMessage(ctx, sc, msg)
+			}(taskCtx, taskCancel, svcCtx, msgValue)
 		}
 	}
 }
