@@ -1,4 +1,3 @@
-// Package main 包含 Redis 队列消费者的具体业务处理逻辑。
 // 本文件专门负责 queue:spatial_sync 队列的消息结构解析与 PostGIS 空间数据库的数据同步。
 package main
 
@@ -13,8 +12,8 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-// redisQueueKey 定义空间同步的 Redis 队列 Key
-const redisQueueKey = "queue:spatial_sync"
+// spatialSyncQueueKey 定义空间同步的 Redis 队列 Key
+const spatialSyncQueueKey = "queue:spatial_sync"
 
 // SyncMessage 队列消息的统一外层结构
 type SyncMessage struct {

@@ -49,7 +49,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	logx.Infof("[Redis-Consumer] 消费者服务启动成功，正在监听 Redis 队列: %s...", redisQueueKey)
+	logx.Infof("[Redis-Consumer] 消费者服务启动成功，正在监听 Redis 队列: %s...", spatialSyncQueueKey)
 
 	// 声明 WaitGroup 用于追踪运行中的消息同步任务协程
 	var wg sync.WaitGroup
@@ -66,7 +66,7 @@ func main() {
 		default:
 			// 从 Redis List 队列中阻塞读取消息
 			// BLPop 第二个参数设为 0 表示无限期阻塞，直到有消息或 Context 被取消
-			res, err := svcCtx.RedisClient.BLPop(ctx, 0, redisQueueKey).Result()
+			res, err := svcCtx.RedisClient.BLPop(ctx, 0, spatialSyncQueueKey).Result()
 			if err != nil {
 				// 若 Context 已经取消，则直接等待进行中的任务并退出
 				if ctx.Err() != nil {
