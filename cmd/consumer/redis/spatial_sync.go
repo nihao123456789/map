@@ -1,38 +1,19 @@
-// Package main 是后台 Redis 消息队列消费者脚本的入口程序。
-// 用于从 Redis 阻塞队列消费堆场和集装箱的同步消息，并将地理空间数据同步写入 PostgreSQL (PostGIS)。
-//
-// 启动方式：
-//
-//	# 默认开发环境
-//	go run cmd/consumer/redis_consumer.go -f etc/mapserver-dev.yaml
-//
-//	# 测试环境
-//	go run cmd/consumer/redis_consumer.go -f etc/mapserver-test.yaml
-//
-//	# 生产环境
-//	go run cmd/consumer/redis_consumer.go -f etc/mapserver-prod.yaml
+// Package main 包含 Redis 队列消费者的具体业务处理逻辑。
+// 本文件专门负责 queue:spatial_sync 队列的消息结构解析与 PostGIS 空间数据库的数据同步。
 package main
 
 import (
 	"context"
 	"encoding/json"
-	"flag"
-	"os/signal"
-	"syscall"
 	"time"
 
-	"map-server/internal/config"
 	mysqlModel "map-server/internal/model/mysql/map_server"
 	"map-server/internal/svc"
 
-	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-// configFile 指定配置文件路径，默认为 etc/mapserver-dev.yaml，可由 -f 参数覆盖
-var configFile = flag.String("f", "etc/mapserver-dev.yaml", "配置文件路径")
-
-// redisQueueKey 定义 Redis 队列 Key
+// redisQueueKey 定义空间同步的 Redis 队列 Key
 const redisQueueKey = "queue:spatial_sync"
 
 // SyncMessage 队列消息的统一外层结构
@@ -62,62 +43,13 @@ type ContainerPayload struct {
 	Status    int16   `json:"status"`
 }
 
-func main() {
-	// 解析命令行参数
-	flag.Parse()
-
-	// 加载服务配置
-	var c config.Config
-	conf.MustLoad(*configFile, &c)
-
-	// 初始化 logx 日志系统，使消费者的日志也能按环境配置自动落地、轮转和压缩
-	logx.MustSetup(c.Log)
-
-	// 初始化服务上下文（包含 Redis 和 PostgreSQL 连接池）
-	svcCtx := svc.NewServiceContext(c)
-
-	// 设置平滑退出的 Context，接收到操作系统终止信号时自动取消
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer cancel()
-
-	logx.Infof("[Redis-Consumer] 消费者服务启动成功，正在监听 Redis 队列: %s...", redisQueueKey)
-
-	// 消费循环
-	for {
-		select {
-		case <-ctx.Done():
-			logx.Info("[Redis-Consumer] 收到退出信号，正在安全终止消费者服务...")
-			return
-		default:
-			// 从 Redis List 队列中阻塞读取消息
-			// BLPop 第二个参数设为 0 表示无限期阻塞，直到有消息或 Context 被取消
-			res, err := svcCtx.RedisClient.BLPop(ctx, 0, redisQueueKey).Result()
-			if err != nil {
-				// 若 Context 已经取消，则直接退出
-				if ctx.Err() != nil {
-					logx.Info("[Redis-Consumer] 消费者服务已平滑退出。")
-					return
-				}
-				// 打印错误日志，休眠 2 秒后继续重试（避免 Redis 连接异常时出现 CPU 满载）
-				logx.Errorf("[Redis-Consumer] 从 Redis 队列 BLPop 失败: %v，将在 2 秒后重试", err)
-				time.Sleep(2 * time.Second)
-				continue
-			}
-
-			// BLPop 成功时返回的结构为 []string{key, value}
-			if len(res) < 2 {
-				continue
-			}
-			msgValue := res[1]
-
-			// 在独立的协程或函数中处理消息，提高主循环的响应速度与健壮性
-			handleRedisMessage(ctx, svcCtx, msgValue)
-		}
-	}
-}
-
-// handleRedisMessage 解析单条 Redis 队列消息并执行相应的 PostGIS 同步操作
-func handleRedisMessage(ctx context.Context, svcCtx *svc.ServiceContext, msgValue string) {
+// handleSpatialSyncMessage 解析单条 Redis 队列消息并执行相应的 PostGIS 同步操作
+//
+// 参数：
+//   - ctx：上下文
+//   - svcCtx：服务上下文
+//   - msgValue：原始 JSON 格式的消息字符串
+func handleSpatialSyncMessage(ctx context.Context, svcCtx *svc.ServiceContext, msgValue string) {
 	logx.Infof("[Redis-Consumer] 接收到消息: %s", msgValue)
 
 	// 1. 解析外层通用消息结构
@@ -140,7 +72,7 @@ func handleRedisMessage(ctx context.Context, svcCtx *svc.ServiceContext, msgValu
 	const maxRetries = 3
 	var dbErr error
 
-	// 2. 执行数据库写入，支持最多 3 次重试机制
+	// 2. 执行数据库同步写入，支持最多 3 次重试机制
 	for retry := 1; retry <= maxRetries; retry++ {
 		if retry > 1 {
 			logx.Errorf("[Redis-Consumer] 写入 PostgreSQL 失败，正在进行第 %d/%d 次重试...", retry, maxRetries)
@@ -181,7 +113,7 @@ func handleRedisMessage(ctx context.Context, svcCtx *svc.ServiceContext, msgValu
 		}
 	}
 
-	// 3. 统计最终同步状态
+	// 3. 统计最终同步状态并持久化失败日志
 	if dbErr != nil {
 		logx.Errorf("[Redis-Consumer] [同步失败] 同步 PostGIS 失败（已达最大重试次数）: type=%s, action=%s, 错误=%v", msg.Type, msg.Action, dbErr)
 		// 记录失败日志到 MySQL
