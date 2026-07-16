@@ -17,6 +17,7 @@ import (
 	"context"
 	"flag"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -50,20 +51,29 @@ func main() {
 
 	logx.Infof("[Redis-Consumer] 消费者服务启动成功，正在监听 Redis 队列: %s...", redisQueueKey)
 
+	// 声明 WaitGroup 用于追踪运行中的消息同步任务协程
+	var wg sync.WaitGroup
+
 	// 开启消费循环
 	for {
 		select {
 		case <-ctx.Done():
-			logx.Info("[Redis-Consumer] 收到退出信号，正在安全终止消费者服务...")
+			logx.Info("[Redis-Consumer] 收到退出信号，停止拉取新消息，正在等待进行中的任务完成...")
+			wg.Wait()
+			svcCtx.Shutdown()
+			logx.Info("[Redis-Consumer] 消费者服务已安全平滑退出。")
 			return
 		default:
 			// 从 Redis List 队列中阻塞读取消息
 			// BLPop 第二个参数设为 0 表示无限期阻塞，直到有消息或 Context 被取消
 			res, err := svcCtx.RedisClient.BLPop(ctx, 0, redisQueueKey).Result()
 			if err != nil {
-				// 若 Context 已经取消，则直接退出
+				// 若 Context 已经取消，则直接等待进行中的任务并退出
 				if ctx.Err() != nil {
-					logx.Info("[Redis-Consumer] 消费者服务已平滑退出。")
+					logx.Info("[Redis-Consumer] 检测到信号退出，停止拉取新消息，正在等待进行中的任务完成...")
+					wg.Wait()
+					svcCtx.Shutdown()
+					logx.Info("[Redis-Consumer] 消费者服务已安全平滑退出。")
 					return
 				}
 				// 打印错误日志，休眠 2 秒后继续重试（避免 Redis 连接异常时出现 CPU 满载）
@@ -78,8 +88,15 @@ func main() {
 			}
 			msgValue := res[1]
 
-			// 在独立的协程或函数中处理消息，提高主循环的响应速度与健壮性
-			handleSpatialSyncMessage(ctx, svcCtx, msgValue)
+			// 使用协程并发处理消息，提高主循环的响应速度与高并发吞吐能力
+			wg.Add(1)
+			go func(msg string) {
+				defer wg.Done()
+				// 创建独立的 10 秒超时任务上下文，不受系统退出信号撤销的影响，确保数据库写入及日志持久化必定能正常执行完
+				taskCtx, taskCancel := context.WithTimeout(context.Background(), 10*time.Second)
+				defer taskCancel()
+				handleSpatialSyncMessage(taskCtx, svcCtx, msg)
+			}(msgValue)
 		}
 	}
 }

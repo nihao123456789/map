@@ -147,3 +147,18 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		SyncFailureLogModel:   syncFailureLogModel,
 	}
 }
+
+// Shutdown 优雅关闭服务上下文中所有的长连接资源。
+func (sc *ServiceContext) Shutdown() {
+	fmt.Println("正在释放服务上下文的连接资源...")
+	// 1. 关闭 PostgreSQL+PostGIS 连接池
+	if sc.PgPool != nil {
+		sc.PgPool.Close()
+		fmt.Println("PostgreSQL 连接池已安全关闭")
+	}
+	// 2. 关闭 Redis 客户端
+	if sc.RedisClient != nil {
+		_ = sc.RedisClient.Close()
+		fmt.Println("Redis 客户端连接已安全关闭")
+	}
+}
