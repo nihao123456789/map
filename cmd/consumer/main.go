@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"map-server/internal/config"
+	"map-server/internal/model"
 	"map-server/internal/svc"
 
 	"github.com/zeromicro/go-zero/core/conf"
@@ -182,8 +183,18 @@ func handleMessage(ctx context.Context, svcCtx *svc.ServiceContext, msgValue str
 
 	// 3. 统计最终同步状态
 	if dbErr != nil {
-		// todo 需要加一个本地日志表，来记录同步失败的信息，以便于后续排查问题
 		logx.Errorf("[Consumer] [同步失败] 同步 PostGIS 失败（已达最大重试次数）: type=%s, action=%s, 错误=%v", msg.Type, msg.Action, dbErr)
+		// 记录失败日志到 MySQL
+		errLog := &model.SyncFailureLog{
+			DataType: msg.Type,
+			Action:   msg.Action,
+			Payload:  string(msg.Payload),
+			ErrorMsg: dbErr.Error(),
+			Status:   1, // 1=未处理
+		}
+		if insertErr := svcCtx.SyncFailureLogModel.Insert(ctx, errLog); insertErr != nil {
+			logx.Errorf("[Consumer] [记录日志失败] 无法将同步失败日志写入数据库: %v", insertErr)
+		}
 	} else {
 		logx.Infof("[Consumer] [同步成功] 成功同步 PostGIS 数据库: type=%s, action=%s", msg.Type, msg.Action)
 	}

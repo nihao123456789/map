@@ -42,6 +42,9 @@ type ServiceContext struct {
 	// ContainerModel 提供 MySQL 集装箱表的数据访问
 	ContainerModel *model.ContainerModel
 
+	// SyncFailureLogModel 提供 MySQL 同步失败日志表的数据访问
+	SyncFailureLogModel *model.SyncFailureLogModel
+
 	// ==================== PostgreSQL + PostGIS 相关 ====================
 
 	// PgPool 是 pgx/v5 的 PostgreSQL 连接池，线程安全，支持高并发
@@ -92,6 +95,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	// -----------------------------------------------------------
 	yardModel := model.NewYardModel(db)
 	containerModel := model.NewContainerModel(db)
+	syncFailureLogModel := model.NewSyncFailureLogModel(db)
 
 	// -----------------------------------------------------------
 	// 初始化 PostgreSQL 连接池（pgxpool）
@@ -139,5 +143,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		PgPool:                pgPool,
 		PostGISYardModel:      postGISYardModel,
 		PostGISContainerModel: postGISContainerModel,
+		SyncFailureLogModel:   syncFailureLogModel,
 	}
 }

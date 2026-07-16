@@ -5,3 +5,5 @@ sql/
 info.txt
 .agents/
 mapserver.exe
+logs/
+README.md
