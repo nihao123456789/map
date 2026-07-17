@@ -5,7 +5,7 @@ Port: 8080
 
 # MySQL 数据库配置（生产环境业务数据存储）
 MySQL:
-  DataSource: "prod_user:ProdPassword@tcp(prod-mysql-host:3306)/map_server_prod?charset=utf8mb4&parseTime=true&loc=Local"
+  DataSource: "prod_user:ProdPassword@tcp(prod-mysql-host:3306)/container_house_production?charset=utf8mb4&parseTime=true&loc=Local"
 
 # Redis 配置（生产环境 Redis-GEO 空间缓存）
 Redis:
