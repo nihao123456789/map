@@ -8,3 +8,4 @@ mapserver.exe
 logs/
 README.md
 swagger.json
+deploy_guide.md
