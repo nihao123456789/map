@@ -14,7 +14,7 @@ type (
 		offersModel
 		withSession(session sqlx.Session) OffersModel
 		// FindByLocationIdAndDirection 根据位置ID和交易方向查询买卖交易挂单列表
-		// TODO: 临时猜测 0 代表买入(supply)，1 代表卖出(demand)，待后期确定后调整此处映射
+		// 参数 direction 可取值：DirectionBuy (买入) 或 DirectionSell (卖出)
 		FindByLocationIdAndDirection(ctx context.Context, locationId int64, direction int64) ([]*Offers, error)
 	}
 
