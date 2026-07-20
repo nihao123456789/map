@@ -26,6 +26,7 @@ import (
 	"net/http"
 
 	"map-server/internal/config"
+	"map-server/internal/errorx"
 	"map-server/internal/handler"
 	"map-server/internal/svc"
 
@@ -44,9 +45,19 @@ func main() {
 
 	// 注册全局错误处理器，将参数校验错误及 Logic 层错误统一输出为友好的 JSON 格式
 	httpx.SetErrorHandlerCtx(func(ctx context.Context, err error) (int, interface{}) {
-		return http.StatusBadRequest, map[string]interface{}{
-			"code": 400,
-			"msg":  err.Error(),
+		switch e := err.(type) {
+		case *errorx.CodeError:
+			// 如果是自定义业务错误，则原样输出自定义的错误码和错误信息，HTTP 状态码返回 200 OK
+			return http.StatusOK, map[string]interface{}{
+				"code": e.Code,
+				"msg":  e.Msg,
+			}
+		default:
+			// 否则（如参数校验失败等普通错误），使用默认的 400 错误码
+			return http.StatusBadRequest, map[string]interface{}{
+				"code": 400,
+				"msg":  err.Error(),
+			}
 		}
 	})
 

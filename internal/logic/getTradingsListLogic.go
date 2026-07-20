@@ -39,7 +39,6 @@ func NewGetTradingsListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *G
 // 返回：响应结果，以及错误信息。
 func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp *types.TradingListResp, err error) {
 	l.Infof("获取交易挂单列表请求: location_id=%d, direction=%s, last_id=%d, page_size=%d", req.LocationId, req.Direction, req.LastId, req.PageSize)
-
 	// 根据 direction 映射数据库中的整数方向值
 	var dbDirection int64
 	switch req.Direction {
