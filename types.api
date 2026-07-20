@@ -102,9 +102,25 @@ type (
 		IsExpired                      bool    `json:"isExpired"`
 		DataSource                     int32   `json:"dataSource"`
 		Meta                           string  `json:"meta"`
-		IsNonNegotiable                bool    `json:"isNonNegotiable"`
-		HasDamages                     bool    `json:"hasDamages"`
-		WithEasyOpenDoor               bool    `json:"withEasyOpenDoor"`
+		IsNonNegotiable                bool         `json:"isNonNegotiable"`
+		HasDamages                     bool         `json:"hasDamages"`
+		WithEasyOpenDoor               bool         `json:"withEasyOpenDoor"`
+		CompanyInfo                    *CompanyInfo `json:"companyInfo,optional"` // 公司信息详情
+	}
+
+	// CompanyInfo 企业详细信息
+	CompanyInfo {
+		Id           int64   `json:"id"`
+		Name         string  `json:"name"`
+		LocationId   int64   `json:"locationId"`
+		Telephone    string  `json:"telephone"`
+		Email        string  `json:"email"`
+		Usci         string  `json:"usci"`
+		Status       int64   `json:"status"`
+		ReviewLevel  float32 `json:"reviewLevel"`
+		ReviewsCount int64   `json:"reviewsCount"`
+		IsOfficial   bool    `json:"isOfficial"`
+		Address      string  `json:"address"`
 	}
 
 	// TradingListResp 交易挂单列表响应结果

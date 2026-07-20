@@ -17,6 +17,7 @@ import (
 	"map-server/internal/config"
 	mysqlModel "map-server/internal/model/mysql/map_server"
 	"map-server/internal/model/mysql/map_server/offers"
+	"map-server/internal/model/mysql/map_server/companies"
 	postgisModel "map-server/internal/model/postgis/map_server"
 )
 
@@ -39,6 +40,9 @@ type ServiceContext struct {
 
 	// OffersModel 提供 MySQL 挂单表的数据访问
 	OffersModel offers.OffersModel
+
+	// CompaniesModel 提供 MySQL 公司表的数据访问
+	CompaniesModel companies.CompaniesModel
 
 	// ==================== PostgreSQL + PostGIS 相关 ====================
 
@@ -85,6 +89,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	// -----------------------------------------------------------
 	syncFailureLogModel := mysqlModel.NewSyncFailureLogModel(db)
 	offersModel := offers.NewOffersModel(db)
+	companiesModel := companies.NewCompaniesModel(db)
 
 	// -----------------------------------------------------------
 	// 初始化 PostgreSQL 连接池（pgxpool）
@@ -131,6 +136,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		PostGISContainerModel: postGISContainerModel,
 		SyncFailureLogModel:   syncFailureLogModel,
 		OffersModel:           offersModel,
+		CompaniesModel:       companiesModel,
 	}
 }
 
