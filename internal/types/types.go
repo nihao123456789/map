@@ -3,30 +3,6 @@
 
 package types
 
-type ContainerInfo struct {
-	Id        int64   `json:"id"`
-	Number    string  `json:"number"`
-	YardId    int64   `json:"yardId"`
-	Longitude float64 `json:"longitude"`
-	Latitude  float64 `json:"latitude"`
-	Distance  float64 `json:"distance"`
-}
-
-type MapQueryReq struct {
-	Longitude float64 `form:"longitude"`
-	Latitude  float64 `form:"latitude"`
-	Radius    float64 `form:"radius"`
-	MinLon    float64 `form:"minLon,optional"`
-	MaxLon    float64 `form:"maxLon,optional"`
-	MinLat    float64 `form:"minLat,optional"`
-	MaxLat    float64 `form:"maxLat,optional"`
-}
-
-type MapQueryResp struct {
-	Yards      []YardInfo      `json:"yards"`
-	Containers []ContainerInfo `json:"containers"`
-}
-
 type OfferInfo struct {
 	Id                             int64   `json:"id"`
 	Condition                      int32   `json:"condition"`
@@ -134,12 +110,4 @@ type TradingListResp struct {
 	LastId   int64       `json:"lastId"`   // 最后一条记录的ID
 	PageSize int64       `json:"pageSize"` // 每页数量
 	List     []OfferInfo `json:"list"`     // list列表
-}
-
-type YardInfo struct {
-	Id        int64   `json:"id"`
-	Name      string  `json:"name"`
-	Longitude float64 `json:"longitude"`
-	Latitude  float64 `json:"latitude"`
-	Distance  float64 `json:"distance"`
 }
