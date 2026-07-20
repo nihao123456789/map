@@ -20,8 +20,10 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
+	"net/http"
 
 	"map-server/internal/config"
 	"map-server/internal/handler"
@@ -29,6 +31,7 @@ import (
 
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/rest"
+	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 // configFile 指定配置文件路径，默认为 etc/mapserver-dev.yaml，
@@ -38,6 +41,14 @@ var configFile = flag.String("f", "etc/mapserver-dev.yaml", "配置文件路径"
 func main() {
 	// 解析命令行参数
 	flag.Parse()
+
+	// 注册全局错误处理器，将参数校验错误及 Logic 层错误统一输出为友好的 JSON 格式
+	httpx.SetErrorHandlerCtx(func(ctx context.Context, err error) (int, interface{}) {
+		return http.StatusBadRequest, map[string]interface{}{
+			"code": 400,
+			"msg":  err.Error(),
+		}
+	})
 
 	// 从配置文件加载服务配置（加载失败时直接 panic 终止）
 	var c config.Config
