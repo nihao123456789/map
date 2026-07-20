@@ -10,6 +10,7 @@ import (
 	"map-server/internal/model/mysql/map_server/companies"
 	"map-server/internal/model/mysql/map_server/vipplans"
 	"map-server/internal/model/mysql/map_server/membershippurchases"
+	"map-server/internal/model/mysql/map_server/depots"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -124,6 +125,31 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		}
 	}
 
+	// 收集并去重有效的 depot_id，防范 N+1 次查询带来的数据库严重压力与 GC 消耗
+	depotIdsMap := make(map[int64]struct{})
+	for _, item := range offersData {
+		if item.DepotId.Valid && item.DepotId.Int64 > 0 {
+			depotIdsMap[item.DepotId.Int64] = struct{}{}
+		}
+	}
+
+	var depotsMap = make(map[int64]*depots.Depots)
+	if len(depotIdsMap) > 0 {
+		depotIds := make([]int64, 0, len(depotIdsMap))
+		for id := range depotIdsMap {
+			depotIds = append(depotIds, id)
+		}
+		// 批量拉取堆场数据
+		depotsData, err := l.svcCtx.DepotsModel.FindByIds(l.ctx, depotIds)
+		if err != nil {
+			l.Errorf("批量拉取堆场详细信息失败: %v", err)
+			return nil, err
+		}
+		for _, dep := range depotsData {
+			depotsMap[dep.Id] = dep
+		}
+	}
+
 	// 转换为 API 响应所定义的 OfferInfo 列表，采用容量预分配降低 GC 压力
 	offersList := make([]types.OfferInfo, 0, len(offersData))
 	for _, item := range offersData {
@@ -132,6 +158,11 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 			if comp, exists := companiesMap[item.CompanyId.Int64]; exists {
 				compPurchases := purchasesMap[item.CompanyId.Int64]
 				info.CompanyInfo = toCompanyInfo(comp, compPurchases, vipPlansMap)
+			}
+		}
+		if item.DepotId.Valid && item.DepotId.Int64 > 0 {
+			if dep, exists := depotsMap[item.DepotId.Int64]; exists {
+				info.DepotInfo = toDepotInfo(dep)
 			}
 		}
 		offersList = append(offersList, info)
@@ -295,6 +326,31 @@ func toCompanyInfo(
 		IsOfficial:       item.IsOfficial == 1,
 		Address:          item.Address.String,
 		MembershipBadges: badges,
+	}
+}
+
+// toDepotInfo 将堆场数据库模型映射转换为 API 返回的 types.DepotInfo 结构体指针。
+func toDepotInfo(item *depots.Depots) *types.DepotInfo {
+	if item == nil {
+		return nil
+	}
+	return &types.DepotInfo{
+		Id:           item.Id,
+		Name:         item.Name.String,
+		PostalCode:   item.PostalCode.String,
+		Website:      item.Website.String,
+		PhoneNumber:  item.PhoneNumber.String,
+		City:         item.City.String,
+		Country:      item.Country.String,
+		ContactName:  item.ContactName.String,
+		Email:        item.Email.String,
+		LocationId:   item.LocationId.Int64,
+		LocalName:    item.LocalName.String,
+		LocalAddress: item.LocalAddress.String,
+		AddressLine1: item.AddressLine1.String,
+		AddressLine2: item.AddressLine2.String,
+		Lat:          float32(item.Lat.Float64),
+		Lng:          float32(item.Lng.Float64),
 	}
 }
 

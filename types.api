@@ -106,6 +106,27 @@ type (
 		HasDamages                     bool         `json:"hasDamages"`
 		WithEasyOpenDoor               bool         `json:"withEasyOpenDoor"`
 		CompanyInfo                    *CompanyInfo `json:"companyInfo,optional"` // 公司信息详情
+		DepotInfo                      *DepotInfo   `json:"depotInfo,optional"`   // 堆场信息详情
+	}
+
+	// DepotInfo 堆场详细信息
+	DepotInfo {
+		Id           int64   `json:"id"`
+		Name         string  `json:"name"`
+		PostalCode   string  `json:"postalCode"`
+		Website      string  `json:"website"`
+		PhoneNumber  string  `json:"phoneNumber"`
+		City         string  `json:"city"`
+		Country      string  `json:"country"`
+		ContactName  string  `json:"contactName"`
+		Email        string  `json:"email"`
+		LocationId   int64   `json:"locationId"`
+		LocalName    string  `json:"localName"`
+		LocalAddress string  `json:"localAddress"`
+		AddressLine1 string  `json:"addressLine1"`
+		AddressLine2 string  `json:"addressLine2"`
+		Lat          float32 `json:"lat"`
+		Lng          float32 `json:"lng"`
 	}
 
 	CompanyInfo {

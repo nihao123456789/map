@@ -20,6 +20,7 @@ import (
 	"map-server/internal/model/mysql/map_server/companies"
 	"map-server/internal/model/mysql/map_server/vipplans"
 	"map-server/internal/model/mysql/map_server/membershippurchases"
+	"map-server/internal/model/mysql/map_server/depots"
 	postgisModel "map-server/internal/model/postgis/map_server"
 )
 
@@ -51,6 +52,9 @@ type ServiceContext struct {
 
 	// MembershipPurchasesModel 提供 MySQL 会员订单购买记录表的数据访问
 	MembershipPurchasesModel membershippurchases.MembershipPurchasesModel
+
+	// DepotsModel 提供 MySQL 堆场表的数据访问
+	DepotsModel depots.DepotsModel
 
 	// ==================== PostgreSQL + PostGIS 相关 ====================
 
@@ -100,6 +104,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	companiesModel := companies.NewCompaniesModel(db)
 	vipplansModel := vipplans.NewVipPlansModel(db)
 	membershippurchasesModel := membershippurchases.NewMembershipPurchasesModel(db)
+	depotsModel := depots.NewDepotsModel(db)
 
 	// -----------------------------------------------------------
 	// 初始化 PostgreSQL 连接池（pgxpool）
@@ -149,6 +154,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		CompaniesModel:           companiesModel,
 		VipPlansModel:            vipplansModel,
 		MembershipPurchasesModel: membershippurchasesModel,
+		DepotsModel:              depotsModel,
 	}
 }
 

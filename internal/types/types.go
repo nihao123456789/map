@@ -18,6 +18,25 @@ type CompanyInfo struct {
 	MembershipBadges []MembershipBadge `json:"membershipBadges"` // 企业享有的会员徽章/权益列表
 }
 
+type DepotInfo struct {
+	Id           int64   `json:"id"`
+	Name         string  `json:"name"`
+	PostalCode   string  `json:"postalCode"`
+	Website      string  `json:"website"`
+	PhoneNumber  string  `json:"phoneNumber"`
+	City         string  `json:"city"`
+	Country      string  `json:"country"`
+	ContactName  string  `json:"contactName"`
+	Email        string  `json:"email"`
+	LocationId   int64   `json:"locationId"`
+	LocalName    string  `json:"localName"`
+	LocalAddress string  `json:"localAddress"`
+	AddressLine1 string  `json:"addressLine1"`
+	AddressLine2 string  `json:"addressLine2"`
+	Lat          float32 `json:"lat"`
+	Lng          float32 `json:"lng"`
+}
+
 type MembershipBadge struct {
 	Kind        string `json:"kind"`        // 类别，例如 trading, leasing
 	Slug        string `json:"slug"`        // 会员唯一标志名，例如 trading_founding
@@ -122,6 +141,7 @@ type OfferInfo struct {
 	HasDamages                     bool         `json:"hasDamages"`
 	WithEasyOpenDoor               bool         `json:"withEasyOpenDoor"`
 	CompanyInfo                    *CompanyInfo `json:"companyInfo,optional"` // 公司信息详情
+	DepotInfo                      *DepotInfo   `json:"depotInfo,optional"`   // 堆场信息详情
 }
 
 type TradingListReq struct {
