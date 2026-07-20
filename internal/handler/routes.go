@@ -19,6 +19,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/api/map/query/postgis",
 				Handler: QueryMapPostGISHandler(serverCtx),
 			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/api/tradings/list",
+				Handler: GetTradingsListHandler(serverCtx),
+			},
 		},
 	)
 }

@@ -1,0 +1,192 @@
+package logic
+
+import (
+	"context"
+	"database/sql"
+
+	"map-server/internal/svc"
+	"map-server/internal/types"
+	"map-server/internal/model/mysql/map_server/offers"
+
+	"github.com/zeromicro/go-zero/core/logx"
+)
+
+// GetTradingsListLogic 负责处理获取交易挂单列表的业务逻辑。
+type GetTradingsListLogic struct {
+	logx.Logger
+	ctx    context.Context
+	svcCtx *svc.ServiceContext
+}
+
+// NewGetTradingsListLogic 创建并返回 GetTradingsListLogic 实例。
+func NewGetTradingsListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetTradingsListLogic {
+	return &GetTradingsListLogic{
+		Logger: logx.WithContext(ctx),
+		ctx:    ctx,
+		svcCtx: svcCtx,
+	}
+}
+
+// GetTradingsList 获取集装箱交易挂单列表。
+//
+// 参数：
+//   - req：请求参数（包含 location_id 和 direction）
+//
+// 返回：响应结果，以及错误信息。
+func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp *types.TradingListResp, err error) {
+	l.Infof("获取交易挂单列表请求: location_id=%d, direction=%s, last_id=%d, page_size=%d", req.LocationId, req.Direction, req.LastId, req.PageSize)
+
+	// 根据 direction 映射数据库中的整数方向值
+	var dbDirection int64
+	switch req.Direction {
+	case "supply":
+		dbDirection = offers.DirectionBuy
+	case "demand":
+		dbDirection = offers.DirectionSell
+	default:
+		l.Errorf("无效的交易方向参数: %s", req.Direction)
+		return &types.TradingListResp{List: []types.OfferInfo{}}, nil
+	}
+
+	// 游标分页限制机制，防范海量数据查询导致内存溢出 (OOM) 与 GC 压力
+	limit := req.PageSize
+	if limit <= 0 {
+		limit = 10 // 默认每页10条
+	} else if limit > 100 {
+		limit = 100 // 最大限制单页100条
+	}
+
+	// 从 MySQL 中查询挂单列表（支持游标分页）
+	offersData, err := l.svcCtx.OffersModel.FindByLocationIdAndDirection(l.ctx, req.LocationId, dbDirection, req.LastId, limit)
+	if err != nil {
+		l.Errorf("查询挂单列表失败: %v", err)
+		return nil, err
+	}
+
+	// 转换为 API 响应所定义的 OfferInfo 列表
+	// 采用容量预分配，减小 GC 压力并避免频繁扩容
+	offersList := make([]types.OfferInfo, 0, len(offersData))
+	for _, item := range offersData {
+		offersList = append(offersList, toOfferInfo(item))
+	}
+
+	// 获取最后一条记录的 ID
+	var lastId int64
+	if len(offersData) > 0 {
+		lastId = offersData[len(offersData)-1].Id
+	}
+
+	return &types.TradingListResp{
+		LastId:   lastId,
+		PageSize: limit,
+		List:     offersList,
+	}, nil
+}
+
+// toOfferInfo 将数据库模型转换成 API 响应对应的 OfferInfo 结构体。
+func toOfferInfo(item *offers.Offers) types.OfferInfo {
+	return types.OfferInfo{
+		Id:                             item.Id,
+		Condition:                      int32(item.Condition.Int64),
+		Type:                           item.Type,
+		PickupLocationId:               int32(item.PickupLocationId.Int64),
+		DropoffLocationId:              int32(item.DropoffLocationId.Int64),
+		Quantity:                       int32(item.Quantity),
+		PickupCharge:                   float32(item.PickupCharge),
+		FreeDays:                       int32(item.FreeDays.Int64),
+		PerDiems:                       float32(item.PerDiems),
+		StorageFee:                     float32(item.StorageFee),
+		Dpp:                            float32(item.Dpp),
+		Premium:                        float32(item.Premium),
+		NewBuildPrice:                  float32(item.NewBuildPrice),
+		DepreciationPerYear:            float32(item.DepreciationPerYear),
+		MinimumReplacementValue:        float32(item.MinimumReplacementValue),
+		AdditionalInformation:          item.AdditionalInformation.String,
+		UserId:                         int32(item.UserId),
+		CompanyId:                      int32(item.CompanyId.Int64),
+		Direction:                      int32(item.Direction.Int64),
+		ValidDays:                      int32(item.ValidDays),
+		EquipmentType:                  int32(item.EquipmentType),
+		CommercialTerm:                 int32(item.CommercialTerm),
+		Comments:                       item.Comments.String,
+		ReviewsCount:                   int32(item.ReviewsCount),
+		Prefixes:                       item.Prefixes.String,
+		YearOfManufacture:              int32(item.YearOfManufacture.Int64),
+		ManufacturerId:                 int32(item.ManufacturerId.Int64),
+		DamageProtectionPlan:           float32(item.DamageProtectionPlan),
+		NegotiationsCount:              int32(item.NegotiationsCount),
+		Category:                       int32(item.Category.Int64),
+		ExpiresAt:                      formatTime(item.ExpiresAt),
+		ReviewId:                       int32(item.ReviewId.Int64),
+		Detail:                         item.Detail.String,
+		Status:                         int32(item.Status),
+		DeletedAt:                      formatTime(item.DeletedAt),
+		ExpiresIn:                      int32(item.ExpiresIn),
+		ReadyForPickupOn:               formatTime(item.ReadyForPickupOn),
+		ReadyForPickupFrom:             formatTime(item.ReadyForPickupFrom),
+		ReadyForPickupTo:               formatTime(item.ReadyForPickupTo),
+		WithLockBox:                    item.WithLockBox != 0,
+		WithForkliftPockets:            item.WithForkliftPockets != 0,
+		SellFor:                        int32(item.SellFor.Int64),
+		LocationId:                     int32(item.LocationId.Int64),
+		Name:                           item.Name.String,
+		ImagesCount:                    int32(item.ImagesCount),
+		DocumentsCount:                 int32(item.DocumentsCount),
+		TradeType:                      int32(item.TradeType),
+		ExpectedDeliveryOn:             formatTime(item.ExpectedDeliveryOn),
+		ExpectedDeliveryFrom:           formatTime(item.ExpectedDeliveryFrom),
+		ExpectedDeliveryTo:             formatTime(item.ExpectedDeliveryTo),
+		DepotId:                        int32(item.DepotId.Int64),
+		UniqueNumber:                   item.UniqueNumber.String,
+		CreatedAt:                      item.CreatedAt.Format("2006-01-02 15:04:05"),
+		UpdatedAt:                      item.UpdatedAt.Format("2006-01-02 15:04:05"),
+		Price:                          float32(item.Price.Float64),
+		Color:                          int32(item.Color.Int64),
+		EstimatedEmptyDeliveryDateFrom: formatTime(item.EstimatedEmptyDeliveryDateFrom),
+		OfferType:                      int32(item.OfferType.Int64),
+		Source:                         int32(item.Source),
+		PickupChargePayer:              int32(item.PickupChargePayer.Int64),
+		InsuranceFee:                   float32(item.InsuranceFee),
+		YearOfManufactureRangeFrom:     int32(item.YearOfManufactureRangeFrom.Int64),
+		YearOfManufactureRangeTo:       int32(item.YearOfManufactureRangeTo.Int64),
+		CscTestCertificate:             item.CscTestCertificate != 0,
+		EquipmentTypeId:                int32(item.EquipmentTypeId.Int64),
+		InsuranceType:                  int32(item.InsuranceType.Int64),
+		InsuranceDays:                  int32(item.InsuranceDays),
+		Extra:                          item.Extra.String,
+		Colors:                         item.Colors.String,
+		PinnedAt:                       formatTime(item.PinnedAt),
+		BumpedAt:                       formatTime(item.BumpedAt),
+		StorageFreeDays:                int32(item.StorageFreeDays),
+		ConditionTagIds:                item.ConditionTagIds.String,
+		ConditionLogo:                  int32(item.ConditionLogo.Int64),
+		NumberOfVents:                  int32(item.NumberOfVents),
+		DealCount:                      int32(item.DealCount),
+		CscExpiresOn:                   formatTime(item.CscExpiresOn),
+		EstimatedEmptyDeliveryDateTo:   formatTime(item.EstimatedEmptyDeliveryDateTo),
+		InstantSale:                    item.InstantSale != 0,
+		ConsignorId:                    int32(item.ConsignorId.Int64),
+		ConsignorName:                  item.ConsignorName.String,
+		Label:                          item.Label.String,
+		DropoffLocationIds:             item.DropoffLocationIds.String,
+		PickupLocationIds:              item.PickupLocationIds.String,
+		OriginalPrice:                  float32(item.OriginalPrice.Float64),
+		IsSpecialOffer:                 item.IsSpecialOffer.Int64 != 0,
+		SourceProposalId:               int32(item.SourceProposalId.Int64),
+		IsExpired:                      item.IsExpired != 0,
+		DataSource:                     int32(item.DataSource),
+		Meta:                           item.Meta.String,
+		IsNonNegotiable:                item.IsNonNegotiable != 0,
+		HasDamages:                     item.HasDamages != 0,
+		WithEasyOpenDoor:               item.WithEasyOpenDoor.Int64 != 0,
+	}
+}
+
+// formatTime 辅助格式化 NullTime。
+func formatTime(nt sql.NullTime) string {
+	if nt.Valid {
+		return nt.Time.Format("2006-01-02 15:04:05")
+	}
+	return ""
+}
+
