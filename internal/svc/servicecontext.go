@@ -36,9 +36,6 @@ type ServiceContext struct {
 	// YardModel 提供 MySQL 堆场表的数据访问
 	YardModel *mysqlModel.YardModel
 
-	// ContainerModel 提供 MySQL 集装箱表的数据访问
-	ContainerModel *mysqlModel.ContainerModel
-
 	// SyncFailureLogModel 提供 MySQL 同步失败日志表的数据访问
 	SyncFailureLogModel *mysqlModel.SyncFailureLogModel
 
@@ -86,7 +83,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	// 初始化 MySQL Model
 	// -----------------------------------------------------------
 	yardModel := mysqlModel.NewYardModel(db)
-	containerModel := mysqlModel.NewContainerModel(db)
 	syncFailureLogModel := mysqlModel.NewSyncFailureLogModel(db)
 
 	// -----------------------------------------------------------
@@ -130,7 +126,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		DB:                    db,
 		RedisClient:           redisClient,
 		YardModel:             yardModel,
-		ContainerModel:        containerModel,
 		PgPool:                pgPool,
 		PostGISYardModel:      postGISYardModel,
 		PostGISContainerModel: postGISContainerModel,
