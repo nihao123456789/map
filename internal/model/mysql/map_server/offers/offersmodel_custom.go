@@ -21,30 +21,34 @@ func (m *customOffersModel) FindByLocationIdAndDirection(ctx context.Context, lo
 	var query string
 	var args []interface{}
 
-	if lastId > 0 {
-		// 游标分页条件：
-		// 倒序规则下，上一页最后一条记录的 (bumped_at, id) 组成了游标的分界点。
-		// 新一页的数据必须满足 (bumped_at, id) < (last_bumped_at, last_id)
-		query = fmt.Sprintf(
-			"select %s from %s where `location_id` = ? and `type` = '%s' and `direction` = ? and `status` = %d and `is_expired` = %d and `deleted_at` is null and (`bumped_at` < (select `bumped_at` from `offers` where `id` = ?) or (`bumped_at` = (select `bumped_at` from `offers` where `id` = ?) and `id` < ?)) order by `bumped_at` desc, `id` desc limit ?",
-			offersRows,
-			m.table,
-			OfferTypeTrading,
-			OfferStatusPublished,
-			OfferNotExpired,
-		)
-		args = []interface{}{locationId, direction, lastId, lastId, lastId, limit}
-	} else {
-		query = fmt.Sprintf(
-			"select %s from %s where `location_id` = ? and `type` = '%s' and `direction` = ? and `status` = %d and `is_expired` = %d and `deleted_at` is null order by `bumped_at` desc, `id` desc limit ?",
-			offersRows,
-			m.table,
-			OfferTypeTrading,
-			OfferStatusPublished,
-			OfferNotExpired,
-		)
-		args = []interface{}{locationId, direction, limit}
+	// 基础条件拼接，固定过滤 Trading 挂单、对应方向、已发布 (status=10)、且未过期 (is_expired=0) 并过滤物理删除
+	baseWhere := fmt.Sprintf(
+		"where `type` = '%s' and `direction` = ? and `status` = %d and `is_expired` = %d and `deleted_at` is null",
+		OfferTypeTrading,
+		OfferStatusPublished,
+		OfferNotExpired,
+	)
+	args = append(args, direction)
+
+	// 如果 locationId > 0，则追加 location_id 条件进行过滤；否则（不传或为0）查询所有位置的挂单数据
+	if locationId > 0 {
+		baseWhere += " and `location_id` = ?"
+		args = append(args, locationId)
 	}
+
+	// 游标式分页限制
+	if lastId > 0 {
+		baseWhere += " and (`bumped_at` < (select `bumped_at` from `offers` where `id` = ?) or (`bumped_at` = (select `bumped_at` from `offers` where `id` = ?) and `id` < ?))"
+		args = append(args, lastId, lastId, lastId)
+	}
+
+	query = fmt.Sprintf(
+		"select %s from %s %s order by `bumped_at` desc, `id` desc limit ?",
+		offersRows,
+		m.table,
+		baseWhere,
+	)
+	args = append(args, limit)
 
 	var resp []*Offers
 	err := m.conn.QueryRowsCtx(ctx, &resp, query, args...)

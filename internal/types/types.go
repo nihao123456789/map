@@ -145,7 +145,7 @@ type OfferInfo struct {
 }
 
 type TradingListReq struct {
-	LocationId int64  `json:"location_id"`
+	LocationId int64  `json:"location_id,optional"`
 	Direction  string `json:"direction"`
 	LastId     int64  `json:"last_id,optional"`   // 游标分页：上一页最后一条记录的ID
 	PageSize   int64  `json:"page_size,optional"` // 每页数量
