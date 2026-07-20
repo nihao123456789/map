@@ -4,17 +4,27 @@
 package types
 
 type CompanyInfo struct {
-	Id           int64   `json:"id"`
-	Name         string  `json:"name"`
-	LocationId   int64   `json:"locationId"`
-	Telephone    string  `json:"telephone"`
-	Email        string  `json:"email"`
-	Usci         string  `json:"usci"`
-	Status       int64   `json:"status"`
-	ReviewLevel  float32 `json:"reviewLevel"`
-	ReviewsCount int64   `json:"reviewsCount"`
-	IsOfficial   bool    `json:"isOfficial"`
-	Address      string  `json:"address"`
+	Id               int64             `json:"id"`
+	Name             string            `json:"name"`
+	LocationId       int64             `json:"locationId"`
+	Telephone        string            `json:"telephone"`
+	Email            string            `json:"email"`
+	Usci             string            `json:"usci"`
+	Status           int64             `json:"status"`
+	ReviewLevel      float32           `json:"reviewLevel"`
+	ReviewsCount     int64             `json:"reviewsCount"`
+	IsOfficial       bool              `json:"isOfficial"`
+	Address          string            `json:"address"`
+	MembershipBadges []MembershipBadge `json:"membershipBadges"` // 企业享有的会员徽章/权益列表
+}
+
+type MembershipBadge struct {
+	Kind        string `json:"kind"`        // 类别，例如 trading, leasing
+	Slug        string `json:"slug"`        // 会员唯一标志名，例如 trading_founding
+	Name        string `json:"name"`        // 会员中文名称
+	NameEn      string `json:"nameEn"`      // 会员英文名称
+	DisplayName string `json:"displayName"` // 徽章展示名称
+	ExpiresAt   string `json:"expiresAt"`   // 过期时间，RFC3339 格式
 }
 
 type OfferInfo struct {

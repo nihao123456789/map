@@ -8,6 +8,8 @@ import (
 	"map-server/internal/types"
 	"map-server/internal/model/mysql/map_server/offers"
 	"map-server/internal/model/mysql/map_server/companies"
+	"map-server/internal/model/mysql/map_server/vipplans"
+	"map-server/internal/model/mysql/map_server/membershippurchases"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -73,12 +75,15 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 	}
 
 	var companiesMap = make(map[int64]*companies.Companies)
+	var purchasesMap = make(map[int64][]*membershippurchases.MembershipPurchases)
+	var vipPlansMap = make(map[int64]*vipplans.VipPlans)
+
 	if len(companyIdsMap) > 0 {
 		companyIds := make([]int64, 0, len(companyIdsMap))
 		for id := range companyIdsMap {
 			companyIds = append(companyIds, id)
 		}
-		// 批量拉取公司详细数据
+		// 1. 批量拉取公司详细数据
 		companiesData, err := l.svcCtx.CompaniesModel.FindByIds(l.ctx, companyIds)
 		if err != nil {
 			l.Errorf("批量拉取企业详细信息失败: %v", err)
@@ -86,6 +91,36 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		}
 		for _, comp := range companiesData {
 			companiesMap[comp.Id] = comp
+		}
+
+		// 2. 批量拉取激活状态的会员购买记录
+		purchasesData, err := l.svcCtx.MembershipPurchasesModel.FindActiveByCompanyIds(l.ctx, companyIds)
+		if err != nil {
+			l.Errorf("批量拉取企业会员购买记录失败: %v", err)
+			return nil, err
+		}
+
+		// 3. 将 purchasesData 按 company_id 划分并收集涉及的 plan_ids
+		vipPlanIdsMap := make(map[int64]struct{})
+		for _, p := range purchasesData {
+			purchasesMap[p.CompanyId] = append(purchasesMap[p.CompanyId], p)
+			vipPlanIdsMap[p.VipPlanId] = struct{}{}
+		}
+
+		// 4. 批量拉取所涉及的 vip_plans 套餐配置
+		if len(vipPlanIdsMap) > 0 {
+			vipPlanIds := make([]int64, 0, len(vipPlanIdsMap))
+			for pid := range vipPlanIdsMap {
+				vipPlanIds = append(vipPlanIds, pid)
+			}
+			plansData, err := l.svcCtx.VipPlansModel.FindByIds(l.ctx, vipPlanIds)
+			if err != nil {
+				l.Errorf("批量拉取会员套餐信息失败: %v", err)
+				return nil, err
+			}
+			for _, plan := range plansData {
+				vipPlansMap[plan.Id] = plan
+			}
 		}
 	}
 
@@ -95,7 +130,8 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		info := toOfferInfo(item)
 		if item.CompanyId.Valid && item.CompanyId.Int64 > 0 {
 			if comp, exists := companiesMap[item.CompanyId.Int64]; exists {
-				info.CompanyInfo = toCompanyInfo(comp)
+				compPurchases := purchasesMap[item.CompanyId.Int64]
+				info.CompanyInfo = toCompanyInfo(comp, compPurchases, vipPlansMap)
 			}
 		}
 		offersList = append(offersList, info)
@@ -222,22 +258,43 @@ func formatTime(nt sql.NullTime) string {
 }
 
 // toCompanyInfo 将企业数据库模型映射转换为 API 返回的 types.CompanyInfo 结构体指针。
-func toCompanyInfo(item *companies.Companies) *types.CompanyInfo {
+func toCompanyInfo(
+	item *companies.Companies,
+	purchases []*membershippurchases.MembershipPurchases,
+	vipPlans map[int64]*vipplans.VipPlans,
+) *types.CompanyInfo {
 	if item == nil {
 		return nil
 	}
+
+	// 内存中装配该企业的有效会员徽章列表，采用容量预分配
+	badges := make([]types.MembershipBadge, 0, len(purchases))
+	for _, p := range purchases {
+		if plan, exists := vipPlans[p.VipPlanId]; exists {
+			badges = append(badges, types.MembershipBadge{
+				Kind:        plan.MembershipKind.String,
+				Slug:        plan.Slug.String,
+				Name:        plan.Name,
+				NameEn:      plan.NameEn,
+				DisplayName: plan.Name,
+				ExpiresAt:   p.ExpiresAt.Format("2006-01-02T15:04:05+08:00"),
+			})
+		}
+	}
+
 	return &types.CompanyInfo{
-		Id:           item.Id,
-		Name:         item.Name.String,
-		LocationId:   item.LocationId.Int64,
-		Telephone:    item.Telephone.String,
-		Email:        item.Email.String,
-		Usci:         item.Usci.String,
-		Status:       item.Status,
-		ReviewLevel:  float32(item.ReviewLevel),
-		ReviewsCount: item.ReviewsCount,
-		IsOfficial:   item.IsOfficial == 1,
-		Address:      item.Address.String,
+		Id:               item.Id,
+		Name:             item.Name.String,
+		LocationId:       item.LocationId.Int64,
+		Telephone:        item.Telephone.String,
+		Email:            item.Email.String,
+		Usci:             item.Usci.String,
+		Status:           item.Status,
+		ReviewLevel:      float32(item.ReviewLevel),
+		ReviewsCount:     item.ReviewsCount,
+		IsOfficial:       item.IsOfficial == 1,
+		Address:          item.Address.String,
+		MembershipBadges: badges,
 	}
 }
 

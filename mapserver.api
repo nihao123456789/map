@@ -7,7 +7,7 @@ import "types.api"
 // 接口元信息
 info (
 	title:  "MapServer"
-	desc:   "地图空间查询服务 API 定义"
+	desc:   "地图查询服务 API 定义"
 	author: "map-server"
 	email:  ""
 )
