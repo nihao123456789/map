@@ -16,11 +16,11 @@ import (
 // 示例sql：SELECT * FROM `offers` WHERE direction = 0 and `type` = 'Trading' and `deleted_at` is null and `status` = 10 and is_expired = 0 limit 10\G;
 func (m *customOffersModel) FindByLocationIdAndDirection(ctx context.Context, locationId int64, direction int64) ([]*Offers, error) {
 	query := fmt.Sprintf(
-		"select %s from %s where `location_id` = ? and `type` = '%s' and `direction` = ? and `status` = %d and `is_expired` = %d and `deleted_at` is null",
+		"select %s from %s where `location_id` = ? and `type` = '%s' and `direction` = ? and `status` = %d and `is_expired` = %d and `deleted_at` is null order by `bumped_at` desc",
 		offersRows,
 		m.table,
 		OfferTypeTrading,
-		OfferStatusActive,
+		OfferStatusPublished,
 		OfferNotExpired,
 	)
 	var resp []*Offers

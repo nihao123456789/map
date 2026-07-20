@@ -19,6 +19,6 @@ const (
 	// OfferExpired 代表挂单已过期
 	OfferExpired = 1
 
-	// OfferStatusActive 代表挂单为有效上架状态
-	OfferStatusActive = 10
+	// OfferStatusPublished 代表挂单为已发布状态
+	OfferStatusPublished = 10
 )
