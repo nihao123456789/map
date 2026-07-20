@@ -33,9 +33,6 @@ type ServiceContext struct {
 	// RedisClient 是原生的 go-redis 客户端，用于执行 GEO 等高级命令
 	RedisClient *redis.Client
 
-	// YardModel 提供 MySQL 堆场表的数据访问
-	YardModel *mysqlModel.YardModel
-
 	// SyncFailureLogModel 提供 MySQL 同步失败日志表的数据访问
 	SyncFailureLogModel *mysqlModel.SyncFailureLogModel
 
@@ -82,7 +79,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	// -----------------------------------------------------------
 	// 初始化 MySQL Model
 	// -----------------------------------------------------------
-	yardModel := mysqlModel.NewYardModel(db)
 	syncFailureLogModel := mysqlModel.NewSyncFailureLogModel(db)
 
 	// -----------------------------------------------------------
@@ -125,7 +121,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		Config:                c,
 		DB:                    db,
 		RedisClient:           redisClient,
-		YardModel:             yardModel,
 		PgPool:                pgPool,
 		PostGISYardModel:      postGISYardModel,
 		PostGISContainerModel: postGISContainerModel,
