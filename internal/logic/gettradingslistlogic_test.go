@@ -31,11 +31,12 @@ func TestGetTradingsList_LocationInfo(t *testing.T) {
 	l := logic.NewGetTradingsListLogic(context.Background(), svcCtx)
 
 	req := &types.TradingListReq{
-		Direction: "supply",
-		Category:  "dry",
-		Condition: "brand_new",
-		Color:     "",
-		PageSize:  1,
+		Direction:     "supply",
+		Category:      "dry",
+		Condition:     "brand_new",
+		Color:         "",
+		EquipmentType: "twenty_dry_container",
+		PageSize:      1,
 	}
 
 	resp, err := l.GetTradingsList(req)

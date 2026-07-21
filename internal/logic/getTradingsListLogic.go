@@ -96,6 +96,78 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		dbColor = val
 	}
 
+	// 解析 equipmentType 箱型规格：根据 enums.json 标准数据字典映射为对应 ID 数值
+	var dbEquipmentType int64
+	var equipmentTypeMap = map[string]int64{
+		"twenty_dry_container":                             10,
+		"forty_dry_container":                              20,
+		"forty_high_cube":                                  30,
+		"ten_dry_container":                                40,
+		"ten_double_door":                                  50,
+		"ten_high_cube":                                    60,
+		"ten_high_cube_double_door":                        70,
+		"twenty_double_door":                               80,
+		"twenty_double_door_open_side_two_doors":           90,
+		"twenty_double_door_open_side_full_open":           100,
+		"twenty_duocon":                                    110,
+		"twenty_flatrack":                                  120,
+		"twenty_hard_top":                                  130,
+		"twenty_open_side_two_doors":                       140,
+		"twenty_open_side_full_open":                       150,
+		"twenty_open_top":                                  160,
+		"twenty_pallet_wide":                               170,
+		"twenty_reefer":                                    180,
+		"twenty_tri_door":                                  190,
+		"twenty_high_cube":                                 200,
+		"twenty_high_cube_double_door":                     210,
+		"twenty_high_cube_double_door_open_side_two_doors": 220,
+		"twenty_high_cube_double_door_open_side_full_open": 230,
+		"twenty_high_cube_duocon":                          240,
+		"twenty_high_cube_flatrack":                        250,
+		"twenty_high_cube_hard_top":                        260,
+		"twenty_high_cube_open_side_two_doors":             270,
+		"twenty_high_cube_open_side_full_open":             280,
+		"twenty_high_cube_open_top":                        290,
+		"twenty_high_cube_pallet_wide":                     300,
+		"twenty_high_cube_reefer":                          310,
+		"twenty_high_cube_tri_door":                        320,
+		"forty_high_cube_double_door":                      330,
+		"forty_high_cube_double_door_open_side_two_doors":  340,
+		"forty_high_cube_double_door_open_side_full_open":  350,
+		"forty_high_cube_duocon":                           360,
+		"forty_high_cube_flatrack":                         370,
+		"forty_high_cube_hard_top":                         380,
+		"forty_high_cube_open_side_two_doors":              390,
+		"forty_high_cube_open_side_full_open":              400,
+		"forty_high_cube_open_top":                         410,
+		"forty_high_cube_pallet_wide":                      420,
+		"forty_high_cube_reefer":                           430,
+		"forty_high_cube_tri_door":                         440,
+		"forty_five_high_cube":                             450,
+		"forty_five_high_cube_double_door":                 460,
+		"forty_five_high_cube_flatrack":                    470,
+		"forty_five_high_cube_open_top":                    480,
+		"forty_five_high_cube_pallet_wide":                 490,
+		"forty_five_high_cube_reefer":                      500,
+		"fifty_three_high_cube":                            510,
+		"twenty_tank_t1":                                   520,
+		"twenty_tank_t11":                                  530,
+		"twenty_tank_t14":                                  540,
+		"twenty_tank_t2":                                   550,
+		"twenty_tank_t20":                                  560,
+		"twenty_tank_t22":                                  570,
+		"twenty_tank_t3":                                   580,
+		"twenty_tank_t4":                                   590,
+		"twenty_tank_t50":                                  600,
+		"twenty_tank_t7":                                   610,
+		"twenty_tank_t75":                                  620,
+		"forty_tank_t75":                                   630,
+		"tank_container":                                   640,
+	}
+	if val, exists := equipmentTypeMap[req.EquipmentType]; exists {
+		dbEquipmentType = val
+	}
+
 	// 游标分页限制机制，防范海量数据查询导致内存溢出 (OOM) 与 GC 压力
 	limit := req.PageSize
 	if limit <= 0 {
@@ -105,14 +177,14 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 	}
 
 	// 统计满足条件的挂单总记录数
-	totalCount, err := l.svcCtx.OffersModel.CountByLocationIdAndDirection(l.ctx, req.LocationId, dbDirection, dbCategory, dbCondition, dbColor)
+	totalCount, err := l.svcCtx.OffersModel.CountByLocationIdAndDirection(l.ctx, req.LocationId, dbDirection, dbCategory, dbCondition, dbColor, dbEquipmentType)
 	if err != nil {
 		l.Errorf("统计挂单总数失败: %v", err)
 		return nil, err
 	}
 
 	// 从 MySQL 中查询挂单列表（支持游标分页）
-	offersData, err := l.svcCtx.OffersModel.FindByLocationIdAndDirection(l.ctx, req.LocationId, dbDirection, dbCategory, dbCondition, dbColor, req.LastId, limit)
+	offersData, err := l.svcCtx.OffersModel.FindByLocationIdAndDirection(l.ctx, req.LocationId, dbDirection, dbCategory, dbCondition, dbColor, dbEquipmentType, req.LastId, limit)
 	if err != nil {
 		l.Errorf("查询挂单列表失败: %v", err)
 		return nil, err
