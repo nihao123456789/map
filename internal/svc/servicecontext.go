@@ -7,7 +7,6 @@
 package svc
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -111,33 +110,10 @@ func NewServiceContext(c config.Config) *ServiceContext {
 
 	// -----------------------------------------------------------
 	// 初始化 PostgreSQL 连接池（pgxpool）
-	// pgxpool 自动管理连接池，支持高并发场景
+	// 注意：当前项目版本暂未使用 PostgreSQL 与 PostGIS，因此跳过 PostgreSQL 连接初始化。
 	// -----------------------------------------------------------
-	pgPoolConfig, err := pgxpool.ParseConfig(c.PostgreSQL.DataSource)
-	if err != nil {
-		panic(fmt.Sprintf("解析 PostgreSQL 连接字符串失败: %v", err))
-	}
-
-	// 设置连接池最大连接数，若配置为 0 则使用默认值 10
-	maxConns := c.PostgreSQL.MaxConns
-	if maxConns <= 0 {
-		maxConns = 10
-	}
-	pgPoolConfig.MaxConns = maxConns
-
-	// 使用 context.Background() 建立连接池（服务启动时执行一次）
-	pgPool, err := pgxpool.NewWithConfig(context.Background(), pgPoolConfig)
-	if err != nil {
-		panic(fmt.Sprintf("初始化 PostgreSQL 连接池失败: %v", err))
-	}
-
-	// 验证 PostgreSQL 连接（Ping）
-	if err := pgPool.Ping(context.Background()); err != nil {
-		// 连接失败仅打印警告，不阻断启动（允许 PostGIS 暂时不可用）
-		fmt.Printf("警告：PostgreSQL 连接失败，PostGIS 接口暂不可用: %v\n", err)
-	} else {
-		fmt.Println("PostgreSQL+PostGIS 连接初始化完成")
-	}
+	var pgPool *pgxpool.Pool = nil
+	fmt.Println("跳过 PostgreSQL 连接初始化（当前项目未使用 PostgreSQL）")
 
 	// -----------------------------------------------------------
 	// 初始化 PostGIS Model

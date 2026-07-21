@@ -49,6 +49,10 @@ type ContainerPayload struct {
 //   - svcCtx：服务上下文
 //   - msgValue：原始 JSON 格式的消息字符串
 func handleSpatialSyncMessage(ctx context.Context, svcCtx *svc.ServiceContext, msgValue string) {
+	if svcCtx.PgPool == nil {
+		logx.Error("[Redis-Consumer] PostgreSQL 连接池未初始化，无法执行 PostGIS 空间数据同步，跳过该消息")
+		return
+	}
 	logx.Infof("[Redis-Consumer] 接收到消息: %s", msgValue)
 
 	// 1. 解析外层通用消息结构
