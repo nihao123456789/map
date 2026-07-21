@@ -37,6 +37,7 @@ type (
 	Enums struct {
 		Id            int64     `db:"id"`
 		Category      string    `db:"category"`
+		CategoryName  string    `db:"category_name"`
 		ItemId        string    `db:"item_id"`
 		Value         string    `db:"value"`
 		Name          string    `db:"name"`
@@ -77,14 +78,14 @@ func (m *defaultEnumsModel) FindOne(ctx context.Context, id int64) (*Enums, erro
 }
 
 func (m *defaultEnumsModel) Insert(ctx context.Context, data *Enums) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?)", m.table, enumsRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.Category, data.ItemId, data.Value, data.Name, data.NameZh, data.Description, data.DescriptionZh, data.Extra)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, enumsRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Category, data.CategoryName, data.ItemId, data.Value, data.Name, data.NameZh, data.Description, data.DescriptionZh, data.Extra)
 	return ret, err
 }
 
 func (m *defaultEnumsModel) Update(ctx context.Context, data *Enums) error {
 	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, enumsRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, data.Category, data.ItemId, data.Value, data.Name, data.NameZh, data.Description, data.DescriptionZh, data.Extra, data.Id)
+	_, err := m.conn.ExecCtx(ctx, query, data.Category, data.CategoryName, data.ItemId, data.Value, data.Name, data.NameZh, data.Description, data.DescriptionZh, data.Extra, data.Id)
 	return err
 }
 
