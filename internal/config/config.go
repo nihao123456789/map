@@ -16,7 +16,7 @@ type Config struct {
 	// RestConf 包含 HTTP 服务的监听地址、端口、超时等配置
 	rest.RestConf
 
-	// MySQL 数据库连接配置（业务数据存储）
+	// MySQL 数据库连接配置（业务数据存储，兼容并指向本地 MariaDB 数据库）
 	MySQL MySQLConf
 
 	// Redis 连接配置（Redis-GEO 空间缓存，使用 go-zero 内置缓存配置结构）
@@ -29,9 +29,9 @@ type Config struct {
 	SignatureSecret string
 }
 
-// MySQLConf 是 MySQL 数据库的连接配置。
+// MySQLConf 是 MySQL/MariaDB 数据库的连接配置。
 type MySQLConf struct {
-	// DataSource 是 MySQL 的 DSN 连接字符串
+	// DataSource 是 MySQL/MariaDB 的 DSN 连接字符串
 	// 格式：user:password@tcp(host:port)/dbname?charset=utf8mb4&parseTime=true&loc=Local
 	DataSource string
 }

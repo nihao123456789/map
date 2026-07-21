@@ -35,7 +35,7 @@ type ServiceContext struct {
 
 	// ==================== MySQL + Redis-GEO 相关 ====================
 
-	// DB 是 go-zero 封装的 MySQL 数据库连接
+	// DB 是 go-zero 封装的 MySQL/MariaDB 数据库连接
 	DB sqlx.SqlConn
 
 	// RedisClient 是原生的 go-redis 客户端，用于执行 GEO 等高级命令
@@ -84,11 +84,12 @@ type ServiceContext struct {
 //   - c：服务配置（从 etc/mapserver-dev.yaml 加载）
 func NewServiceContext(c config.Config) *ServiceContext {
 	// -----------------------------------------------------------
-	// 初始化 MySQL 连接
+	// 初始化 MySQL/MariaDB 连接
 	// 使用 go-zero 的 sqlx 包，支持连接池管理和慢查询日志
+	// 注：此处兼容并使用本地的 MariaDB 数据库（协议与驱动完全相同）。
 	// -----------------------------------------------------------
 	db := sqlx.NewMysql(c.MySQL.DataSource)
-	fmt.Println("MySQL 连接初始化完成")
+	fmt.Println("MySQL/MariaDB 连接初始化完成")
 
 	// -----------------------------------------------------------
 	// 初始化 Redis 客户端（go-redis/v9）
