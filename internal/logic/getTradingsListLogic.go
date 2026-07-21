@@ -188,14 +188,14 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 	}
 
 	// 统计满足条件的挂单总记录数
-	totalCount, err := l.svcCtx.OffersModel.CountByLocationIdAndDirection(l.ctx, req.LocationId, dbDirection, dbCategory, dbCondition, dbColor, dbEquipmentType, dbCommercialTerm)
+	totalCount, err := l.svcCtx.OffersModel.CountByLocationIdAndDirection(l.ctx, req.LocationId, dbDirection, dbCategory, dbCondition, dbColor, dbEquipmentType, dbCommercialTerm, int64(req.YearOfManufactureRangeFrom))
 	if err != nil {
 		l.Errorf("统计挂单总数失败: %v", err)
 		return nil, err
 	}
 
 	// 从 MySQL 中查询挂单列表（支持游标分页）
-	offersData, err := l.svcCtx.OffersModel.FindByLocationIdAndDirection(l.ctx, req.LocationId, dbDirection, dbCategory, dbCondition, dbColor, dbEquipmentType, dbCommercialTerm, req.LastId, limit)
+	offersData, err := l.svcCtx.OffersModel.FindByLocationIdAndDirection(l.ctx, req.LocationId, dbDirection, dbCategory, dbCondition, dbColor, dbEquipmentType, dbCommercialTerm, int64(req.YearOfManufactureRangeFrom), req.LastId, limit)
 	if err != nil {
 		l.Errorf("查询挂单列表失败: %v", err)
 		return nil, err
