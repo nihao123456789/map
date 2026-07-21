@@ -66,6 +66,11 @@ func main() {
 		default:
 			// 从 Redis List 队列中阻塞读取消息
 			// BLPop 第二个参数设为 0 表示无限期阻塞，直到有消息或 Context 被取消
+			if svcCtx.RedisClient == nil {
+				logx.Error("[Redis-Consumer] Redis 客户端未初始化，无法拉取队列消息，将在 5 秒后重试")
+				time.Sleep(5 * time.Second)
+				continue
+			}
 			res, err := svcCtx.RedisClient.BLPop(ctx, 0, spatialSyncQueueKey).Result()
 			if err != nil {
 				// 若 Context 已经取消，则直接等待进行中的任务并退出

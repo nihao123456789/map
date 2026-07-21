@@ -93,18 +93,10 @@ func NewServiceContext(c config.Config) *ServiceContext {
 
 	// -----------------------------------------------------------
 	// 初始化 Redis 客户端（go-redis/v9）
-	// 从配置中读取第一个 Redis 节点的地址和密码
+	// 注意：当前项目版本暂未使用 Redis 缓存与队列，因此跳过 Redis 初始化连接。
 	// -----------------------------------------------------------
-	if len(c.Redis) == 0 {
-		panic("Redis 配置不能为空，请检查 etc/mapserver-dev.yaml 中的 Redis 配置项")
-	}
-	redisCfg := c.Redis[0]
-	redisClient := redis.NewClient(&redis.Options{
-		Addr:     redisCfg.Host, // Redis 服务地址，格式：host:port
-		Password: redisCfg.Pass, // Redis 密码，无密码时为空字符串
-		DB:       0,             // 使用默认的数据库 0
-	})
-	fmt.Println("Redis 连接初始化完成")
+	var redisClient *redis.Client = nil
+	fmt.Println("跳过 Redis 连接初始化（当前项目未使用 Redis）")
 
 	// -----------------------------------------------------------
 	// 初始化 MySQL Model
