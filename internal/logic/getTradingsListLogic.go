@@ -168,6 +168,17 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		dbEquipmentType = val
 	}
 
+	// 解析 commercialTerm 提箱方式：gate_buy -> 10, pick_up -> 20, 其他 -> 0
+	var dbCommercialTerm int64
+	switch req.CommercialTerm {
+	case "gate_buy":
+		dbCommercialTerm = 10
+	case "pick_up":
+		dbCommercialTerm = 20
+	default:
+		dbCommercialTerm = 0
+	}
+
 	// 游标分页限制机制，防范海量数据查询导致内存溢出 (OOM) 与 GC 压力
 	limit := req.PageSize
 	if limit <= 0 {
@@ -177,14 +188,14 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 	}
 
 	// 统计满足条件的挂单总记录数
-	totalCount, err := l.svcCtx.OffersModel.CountByLocationIdAndDirection(l.ctx, req.LocationId, dbDirection, dbCategory, dbCondition, dbColor, dbEquipmentType)
+	totalCount, err := l.svcCtx.OffersModel.CountByLocationIdAndDirection(l.ctx, req.LocationId, dbDirection, dbCategory, dbCondition, dbColor, dbEquipmentType, dbCommercialTerm)
 	if err != nil {
 		l.Errorf("统计挂单总数失败: %v", err)
 		return nil, err
 	}
 
 	// 从 MySQL 中查询挂单列表（支持游标分页）
-	offersData, err := l.svcCtx.OffersModel.FindByLocationIdAndDirection(l.ctx, req.LocationId, dbDirection, dbCategory, dbCondition, dbColor, dbEquipmentType, req.LastId, limit)
+	offersData, err := l.svcCtx.OffersModel.FindByLocationIdAndDirection(l.ctx, req.LocationId, dbDirection, dbCategory, dbCondition, dbColor, dbEquipmentType, dbCommercialTerm, req.LastId, limit)
 	if err != nil {
 		l.Errorf("查询挂单列表失败: %v", err)
 		return nil, err
