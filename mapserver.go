@@ -6,8 +6,8 @@
 // 启动方式：
 //
 //	# 默认开发环境
-//	go run mapserver.go -f etc/mapserver-dev.yaml
-//
+//	$env:GOTMPDIR = "d:\project\map"; go run mapserver.go -f etc/mapserver-dev.yaml
+
 //	# 测试环境
 //	go run mapserver.go -f etc/mapserver-test.yaml
 //
