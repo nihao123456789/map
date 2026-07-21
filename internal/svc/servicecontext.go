@@ -22,6 +22,7 @@ import (
 	"map-server/internal/model/mysql/map_server/membershippurchases"
 	"map-server/internal/model/mysql/map_server/depots"
 	"map-server/internal/model/mysql/map_server/treenodes"
+	"map-server/internal/model/mysql/map_server/enums"
 	postgisModel "map-server/internal/model/postgis/map_server"
 
 	"github.com/zeromicro/go-zero/rest"
@@ -61,6 +62,9 @@ type ServiceContext struct {
 
 	// TreeNodesModel 提供 MySQL 地理位置树节点数据表的访问
 	TreeNodesModel treenodes.TreeNodesModel
+
+	// EnumsModel 提供 MySQL 数据字典表的访问
+	EnumsModel enums.EnumsModel
 
 	// ==================== PostgreSQL + PostGIS 相关 ====================
 
@@ -108,6 +112,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	membershippurchasesModel := membershippurchases.NewMembershipPurchasesModel(db)
 	depotsModel := depots.NewDepotsModel(db)
 	treenodesModel := treenodes.NewTreeNodesModel(db)
+	enumsModel := enums.NewEnumsModel(db)
 
 	// -----------------------------------------------------------
 	// 初始化 PostgreSQL 连接池（pgxpool）
@@ -136,6 +141,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		MembershipPurchasesModel: membershippurchasesModel,
 		DepotsModel:              depotsModel,
 		TreeNodesModel:           treenodesModel,
+		EnumsModel:               enumsModel,
 		SignatureMiddleware:      middleware.NewSignatureMiddleware(c.SignatureSecret).Handle,
 	}
 }

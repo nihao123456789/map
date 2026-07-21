@@ -12,3 +12,5 @@ deploy_guide.md
 enums.json
 run.ps1
 .gocache/
+tables.txt
+scripts/

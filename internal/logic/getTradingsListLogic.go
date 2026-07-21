@@ -3,6 +3,7 @@ package logic
 import (
 	"context"
 	"database/sql"
+	"strconv"
 
 	"map-server/internal/svc"
 	"map-server/internal/types"
@@ -12,6 +13,7 @@ import (
 	"map-server/internal/model/mysql/map_server/membershippurchases"
 	"map-server/internal/model/mysql/map_server/depots"
 	"map-server/internal/model/mysql/map_server/treenodes"
+	"map-server/internal/model/mysql/map_server/enums"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -40,7 +42,7 @@ func NewGetTradingsListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *G
 // 返回：响应结果，以及错误信息。
 func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp *types.TradingListResp, err error) {
 	l.Infof("获取交易挂单列表请求: location_id=%d, direction=%s, last_id=%d, page_size=%d", req.LocationId, req.Direction, req.LastId, req.PageSize)
-	// 根据 direction 映射数据库中的整数方向值
+	// 根据 direction 映射数据库中的整数 direction 值
 	var dbDirection int64
 	switch req.Direction {
 	case "supply":
@@ -63,20 +65,20 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		dbCategory = 0
 	}
 
-	// 解析 condition 箱况：brand_new -> 50, excellent -> 60, cargo_worthy -> 30, wwt -> 20, as_is -> 10, 其他 -> 0
-	var dbCondition int64
-	switch req.Condition {
-	case "brand_new":
-		dbCondition = 50
-	case "excellent":
-		dbCondition = 60
-	case "cargo_worthy":
-		dbCondition = 30
-	case "wwt":
-		dbCondition = 20
-	case "as_is":
-		dbCondition = 10
-	default:
+	// 解析 condition 箱况：通过 EnumsModel 从 enums 数据表中根据 category = enums.CategoryConditions 和 value 动态获取 item_id 的值
+	var itemIDStr string = "0"
+	enumItem, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(l.ctx, enums.CategoryConditions, req.Condition)
+	if err != nil {
+		if err != enums.ErrNotFound {
+			l.Errorf("从 enums 数据表获取箱况失败: value=%s, err=%v", req.Condition, err)
+			return nil, err
+		}
+	} else {
+		itemIDStr = enumItem.ItemId
+	}
+
+	dbCondition, err := strconv.ParseInt(itemIDStr, 10, 64)
+	if err != nil {
 		dbCondition = 0
 	}
 
