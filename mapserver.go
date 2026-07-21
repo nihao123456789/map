@@ -28,6 +28,7 @@ import (
 	"map-server/internal/config"
 	"map-server/internal/errorx"
 	"map-server/internal/handler"
+	"map-server/internal/middleware"
 	"map-server/internal/svc"
 
 	"github.com/zeromicro/go-zero/core/conf"
@@ -71,6 +72,9 @@ func main() {
 
 	// 初始化服务上下文（包含 MySQL、Redis 连接等所有依赖）
 	ctx := svc.NewServiceContext(c)
+
+	// 注册全局成功返回包装中间件
+	server.Use(middleware.UniformResponseMiddleware)
 
 	// 注册所有 HTTP 路由处理器
 	handler.RegisterHandlers(server, ctx)
