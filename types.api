@@ -18,7 +18,7 @@ type (
 		Type                           string  `json:"type"`
 		PickupLocationId               int32   `json:"pickupLocationId"`
 		DropoffLocationId              int32   `json:"dropoffLocationId"`
-		Quantity                       int32   `json:"quantity"`
+		Quantity                       int32   `json:"quantity"` // 集装箱数量
 		PickupCharge                   float32 `json:"pickupCharge"`
 		FreeDays                       int32   `json:"freeDays"`
 		PerDiems                       float32 `json:"perDiems"`
@@ -64,24 +64,24 @@ type (
 		ExpectedDeliveryFrom           string  `json:"expectedDeliveryFrom"`
 		ExpectedDeliveryTo             string  `json:"expectedDeliveryTo"`
 		DepotId                        int32   `json:"depotId"`
-		UniqueNumber                   string  `json:"uniqueNumber"`
+		UniqueNumber                   string  `json:"uniqueNumber"` // 挂单系统流转唯一跟踪号
 		CreatedAt                      string  `json:"createdAt"`
 		UpdatedAt                      string  `json:"updatedAt"`
-		Price                          float32 `json:"price"`
+		Price                          float32 `json:"price"` // 单价
 		Color                          int32   `json:"color"`
 		EstimatedEmptyDeliveryDateFrom string  `json:"estimatedEmptyDeliveryDateFrom"`
 		OfferType                      int32   `json:"offerType"`
 		Source                         int32   `json:"source"`
 		PickupChargePayer              int32   `json:"pickupChargePayer"`
 		InsuranceFee                   float32 `json:"insuranceFee"`
-		YearOfManufactureRangeFrom     int32   `json:"yearOfManufactureRangeFrom"`
-		YearOfManufactureRangeTo       int32   `json:"yearOfManufactureRangeTo"`
+		YearOfManufactureRangeFrom     int32   `json:"yearOfManufactureRangeFrom"` // 要求出厂年份起
+		YearOfManufactureRangeTo       int32   `json:"yearOfManufactureRangeTo"` // 要求出厂年份止
 		CscTestCertificate             bool    `json:"cscTestCertificate"`
 		EquipmentTypeId                int32   `json:"equipmentTypeId"`
 		InsuranceType                  int32   `json:"insuranceType"`
 		InsuranceDays                  int32   `json:"insuranceDays"`
 		Extra                          string  `json:"extra"`
-		Colors                         string  `json:"colors"`
+		Colors                         string  `json:"colors"` // 支持的备选颜色
 		PinnedAt                       string  `json:"pinnedAt"`
 		BumpedAt                       string  `json:"bumpedAt"`
 		StorageFreeDays                int32   `json:"storageFreeDays"`
@@ -106,14 +106,28 @@ type (
 		IsNonNegotiable                bool         `json:"isNonNegotiable"`
 		HasDamages                     bool         `json:"hasDamages"`
 		WithEasyOpenDoor               bool         `json:"withEasyOpenDoor"`
-		CompanyInfo                    *CompanyInfo `json:"companyInfo,optional"` // 公司信息详情
-		DepotInfo                      *DepotInfo   `json:"depotInfo,optional"`   // 堆场信息详情
+		CompanyInfo                    *CompanyInfo  `json:"companyInfo,optional"` // 公司信息详情
+		DepotInfo                      *DepotInfo    `json:"depotInfo,optional"`   // 堆场信息详情
+		LocationInfo                   *LocationInfo `json:"locationInfo,optional"` // 地理位置树节点信息详情
+	}
+
+	// LocationInfo 地理位置树节点信息
+	LocationInfo {
+		Id          int64   `json:"id"`
+		Name        string  `json:"name"`
+		Type        string  `json:"type"`
+		EnglishName string  `json:"englishName"`
+		Lat         float32 `json:"lat"`
+		Lng         float32 `json:"lng"`
+		Level       int32   `json:"level"`
+		FullName    string  `json:"fullName"`
+		FullNameCn  string  `json:"fullNameCn"`
 	}
 
 	// DepotInfo 堆场详细信息
 	DepotInfo {
 		Id           int64   `json:"id"`
-		Name         string  `json:"name"`
+		Name         string  `json:"name"` // 堆场英文/通用名称
 		PostalCode   string  `json:"postalCode"`
 		Website      string  `json:"website"`
 		PhoneNumber  string  `json:"phoneNumber"`
@@ -132,7 +146,7 @@ type (
 
 	CompanyInfo {
 		Id               int64             `json:"id"`
-		Name             string            `json:"name"`
+		Name             string            `json:"name"` // 企业官方名称
 		LocationId       int64             `json:"locationId"`
 		Telephone        string            `json:"telephone"`
 		Email            string            `json:"email"`
@@ -142,7 +156,7 @@ type (
 		ReviewsCount     int64             `json:"reviewsCount"`
 		IsOfficial       bool              `json:"isOfficial"`
 		Address          string            `json:"address"`
-		MembershipBadges []MembershipBadge `json:"membershipBadges"` // 企业享有的会员徽章/权益列表
+		MembershipBadges []MembershipBadge `json:"membershipBadges"` // 企业拥有的且仍在有效激活期的会员徽章列表
 	}
 
 	// MembershipBadge 企业会员徽章/权益信息

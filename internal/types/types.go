@@ -5,7 +5,7 @@ package types
 
 type CompanyInfo struct {
 	Id               int64             `json:"id"`
-	Name             string            `json:"name"`
+	Name             string            `json:"name"` // 企业官方名称
 	LocationId       int64             `json:"locationId"`
 	Telephone        string            `json:"telephone"`
 	Email            string            `json:"email"`
@@ -15,12 +15,12 @@ type CompanyInfo struct {
 	ReviewsCount     int64             `json:"reviewsCount"`
 	IsOfficial       bool              `json:"isOfficial"`
 	Address          string            `json:"address"`
-	MembershipBadges []MembershipBadge `json:"membershipBadges"` // 企业享有的会员徽章/权益列表
+	MembershipBadges []MembershipBadge `json:"membershipBadges"` // 企业拥有的且仍在有效激活期的会员徽章列表
 }
 
 type DepotInfo struct {
 	Id           int64   `json:"id"`
-	Name         string  `json:"name"`
+	Name         string  `json:"name"` // 堆场英文/通用名称
 	PostalCode   string  `json:"postalCode"`
 	Website      string  `json:"website"`
 	PhoneNumber  string  `json:"phoneNumber"`
@@ -37,6 +37,18 @@ type DepotInfo struct {
 	Lng          float32 `json:"lng"`
 }
 
+type LocationInfo struct {
+	Id          int64   `json:"id"`
+	Name        string  `json:"name"`
+	Type        string  `json:"type"`
+	EnglishName string  `json:"englishName"`
+	Lat         float32 `json:"lat"`
+	Lng         float32 `json:"lng"`
+	Level       int32   `json:"level"`
+	FullName    string  `json:"fullName"`
+	FullNameCn  string  `json:"fullNameCn"`
+}
+
 type MembershipBadge struct {
 	Kind        string `json:"kind"`        // 类别，例如 trading, leasing
 	Slug        string `json:"slug"`        // 会员唯一标志名，例如 trading_founding
@@ -47,101 +59,102 @@ type MembershipBadge struct {
 }
 
 type OfferInfo struct {
-	Id                             int64        `json:"id"`
-	Condition                      int32        `json:"condition"`
-	Type                           string       `json:"type"`
-	PickupLocationId               int32        `json:"pickupLocationId"`
-	DropoffLocationId              int32        `json:"dropoffLocationId"`
-	Quantity                       int32        `json:"quantity"`
-	PickupCharge                   float32      `json:"pickupCharge"`
-	FreeDays                       int32        `json:"freeDays"`
-	PerDiems                       float32      `json:"perDiems"`
-	StorageFee                     float32      `json:"storageFee"`
-	Dpp                            float32      `json:"dpp"`
-	Premium                        float32      `json:"premium"`
-	NewBuildPrice                  float32      `json:"newBuildPrice"`
-	DepreciationPerYear            float32      `json:"depreciationPerYear"`
-	MinimumReplacementValue        float32      `json:"minimumReplacementValue"`
-	AdditionalInformation          string       `json:"additionalInformation"`
-	UserId                         int32        `json:"userId"`
-	CompanyId                      int32        `json:"companyId"`
-	Direction                      int32        `json:"direction"`
-	ValidDays                      int32        `json:"validDays"`
-	EquipmentType                  int32        `json:"equipmentType"`
-	CommercialTerm                 int32        `json:"commercialTerm"`
-	Comments                       string       `json:"comments"`
-	ReviewsCount                   int32        `json:"reviewsCount"`
-	Prefixes                       string       `json:"prefixes"`
-	YearOfManufacture              int32        `json:"yearOfManufacture"`
-	ManufacturerId                 int32        `json:"manufacturerId"`
-	DamageProtectionPlan           float32      `json:"damageProtectionPlan"`
-	NegotiationsCount              int32        `json:"negotiationsCount"`
-	Category                       int32        `json:"category"`
-	ExpiresAt                      string       `json:"expiresAt"`
-	ReviewId                       int32        `json:"reviewId"`
-	Detail                         string       `json:"detail"`
-	Status                         int32        `json:"status"`
-	DeletedAt                      string       `json:"deletedAt"`
-	ExpiresIn                      int32        `json:"expiresIn"`
-	ReadyForPickupOn               string       `json:"readyForPickupOn"`
-	ReadyForPickupFrom             string       `json:"readyForPickupFrom"`
-	ReadyForPickupTo               string       `json:"readyForPickupTo"`
-	WithLockBox                    bool         `json:"withLockBox"`
-	WithForkliftPockets            bool         `json:"withForkliftPockets"`
-	SellFor                        int32        `json:"sellFor"`
-	LocationId                     int32        `json:"locationId"`
-	Name                           string       `json:"name"`
-	ImagesCount                    int32        `json:"imagesCount"`
-	DocumentsCount                 int32        `json:"documentsCount"`
-	TradeType                      int32        `json:"tradeType"`
-	ExpectedDeliveryOn             string       `json:"expectedDeliveryOn"`
-	ExpectedDeliveryFrom           string       `json:"expectedDeliveryFrom"`
-	ExpectedDeliveryTo             string       `json:"expectedDeliveryTo"`
-	DepotId                        int32        `json:"depotId"`
-	UniqueNumber                   string       `json:"uniqueNumber"`
-	CreatedAt                      string       `json:"createdAt"`
-	UpdatedAt                      string       `json:"updatedAt"`
-	Price                          float32      `json:"price"`
-	Color                          int32        `json:"color"`
-	EstimatedEmptyDeliveryDateFrom string       `json:"estimatedEmptyDeliveryDateFrom"`
-	OfferType                      int32        `json:"offerType"`
-	Source                         int32        `json:"source"`
-	PickupChargePayer              int32        `json:"pickupChargePayer"`
-	InsuranceFee                   float32      `json:"insuranceFee"`
-	YearOfManufactureRangeFrom     int32        `json:"yearOfManufactureRangeFrom"`
-	YearOfManufactureRangeTo       int32        `json:"yearOfManufactureRangeTo"`
-	CscTestCertificate             bool         `json:"cscTestCertificate"`
-	EquipmentTypeId                int32        `json:"equipmentTypeId"`
-	InsuranceType                  int32        `json:"insuranceType"`
-	InsuranceDays                  int32        `json:"insuranceDays"`
-	Extra                          string       `json:"extra"`
-	Colors                         string       `json:"colors"`
-	PinnedAt                       string       `json:"pinnedAt"`
-	BumpedAt                       string       `json:"bumpedAt"`
-	StorageFreeDays                int32        `json:"storageFreeDays"`
-	ConditionTagIds                string       `json:"conditionTagIds"`
-	ConditionLogo                  int32        `json:"conditionLogo"`
-	NumberOfVents                  int32        `json:"numberOfVents"`
-	DealCount                      int32        `json:"dealCount"`
-	CscExpiresOn                   string       `json:"cscExpiresOn"`
-	EstimatedEmptyDeliveryDateTo   string       `json:"estimatedEmptyDeliveryDateTo"`
-	InstantSale                    bool         `json:"instantSale"`
-	ConsignorId                    int32        `json:"consignorId"`
-	ConsignorName                  string       `json:"consignorName"`
-	Label                          string       `json:"label"`
-	DropoffLocationIds             string       `json:"dropoffLocationIds"`
-	PickupLocationIds              string       `json:"pickupLocationIds"`
-	OriginalPrice                  float32      `json:"originalPrice"`
-	IsSpecialOffer                 bool         `json:"isSpecialOffer"`
-	SourceProposalId               int32        `json:"sourceProposalId"`
-	IsExpired                      bool         `json:"isExpired"`
-	DataSource                     int32        `json:"dataSource"`
-	Meta                           string       `json:"meta"`
-	IsNonNegotiable                bool         `json:"isNonNegotiable"`
-	HasDamages                     bool         `json:"hasDamages"`
-	WithEasyOpenDoor               bool         `json:"withEasyOpenDoor"`
-	CompanyInfo                    *CompanyInfo `json:"companyInfo,optional"` // 公司信息详情
-	DepotInfo                      *DepotInfo   `json:"depotInfo,optional"`   // 堆场信息详情
+	Id                             int64         `json:"id"`
+	Condition                      int32         `json:"condition"`
+	Type                           string        `json:"type"`
+	PickupLocationId               int32         `json:"pickupLocationId"`
+	DropoffLocationId              int32         `json:"dropoffLocationId"`
+	Quantity                       int32         `json:"quantity"` // 集装箱数量
+	PickupCharge                   float32       `json:"pickupCharge"`
+	FreeDays                       int32         `json:"freeDays"`
+	PerDiems                       float32       `json:"perDiems"`
+	StorageFee                     float32       `json:"storageFee"`
+	Dpp                            float32       `json:"dpp"`
+	Premium                        float32       `json:"premium"`
+	NewBuildPrice                  float32       `json:"newBuildPrice"`
+	DepreciationPerYear            float32       `json:"depreciationPerYear"`
+	MinimumReplacementValue        float32       `json:"minimumReplacementValue"`
+	AdditionalInformation          string        `json:"additionalInformation"`
+	UserId                         int32         `json:"userId"`
+	CompanyId                      int32         `json:"companyId"`
+	Direction                      int32         `json:"direction"`
+	ValidDays                      int32         `json:"validDays"`
+	EquipmentType                  int32         `json:"equipmentType"`
+	CommercialTerm                 int32         `json:"commercialTerm"`
+	Comments                       string        `json:"comments"`
+	ReviewsCount                   int32         `json:"reviewsCount"`
+	Prefixes                       string        `json:"prefixes"`
+	YearOfManufacture              int32         `json:"yearOfManufacture"`
+	ManufacturerId                 int32         `json:"manufacturerId"`
+	DamageProtectionPlan           float32       `json:"damageProtectionPlan"`
+	NegotiationsCount              int32         `json:"negotiationsCount"`
+	Category                       int32         `json:"category"`
+	ExpiresAt                      string        `json:"expiresAt"`
+	ReviewId                       int32         `json:"reviewId"`
+	Detail                         string        `json:"detail"`
+	Status                         int32         `json:"status"`
+	DeletedAt                      string        `json:"deletedAt"`
+	ExpiresIn                      int32         `json:"expiresIn"`
+	ReadyForPickupOn               string        `json:"readyForPickupOn"`
+	ReadyForPickupFrom             string        `json:"readyForPickupFrom"`
+	ReadyForPickupTo               string        `json:"readyForPickupTo"`
+	WithLockBox                    bool          `json:"withLockBox"`
+	WithForkliftPockets            bool          `json:"withForkliftPockets"`
+	SellFor                        int32         `json:"sellFor"`
+	LocationId                     int32         `json:"locationId"`
+	Name                           string        `json:"name"`
+	ImagesCount                    int32         `json:"imagesCount"`
+	DocumentsCount                 int32         `json:"documentsCount"`
+	TradeType                      int32         `json:"tradeType"`
+	ExpectedDeliveryOn             string        `json:"expectedDeliveryOn"`
+	ExpectedDeliveryFrom           string        `json:"expectedDeliveryFrom"`
+	ExpectedDeliveryTo             string        `json:"expectedDeliveryTo"`
+	DepotId                        int32         `json:"depotId"`
+	UniqueNumber                   string        `json:"uniqueNumber"` // 挂单系统流转唯一跟踪号
+	CreatedAt                      string        `json:"createdAt"`
+	UpdatedAt                      string        `json:"updatedAt"`
+	Price                          float32       `json:"price"` // 单价
+	Color                          int32         `json:"color"`
+	EstimatedEmptyDeliveryDateFrom string        `json:"estimatedEmptyDeliveryDateFrom"`
+	OfferType                      int32         `json:"offerType"`
+	Source                         int32         `json:"source"`
+	PickupChargePayer              int32         `json:"pickupChargePayer"`
+	InsuranceFee                   float32       `json:"insuranceFee"`
+	YearOfManufactureRangeFrom     int32         `json:"yearOfManufactureRangeFrom"` // 要求出厂年份起
+	YearOfManufactureRangeTo       int32         `json:"yearOfManufactureRangeTo"`   // 要求出厂年份止
+	CscTestCertificate             bool          `json:"cscTestCertificate"`
+	EquipmentTypeId                int32         `json:"equipmentTypeId"`
+	InsuranceType                  int32         `json:"insuranceType"`
+	InsuranceDays                  int32         `json:"insuranceDays"`
+	Extra                          string        `json:"extra"`
+	Colors                         string        `json:"colors"` // 支持的备选颜色
+	PinnedAt                       string        `json:"pinnedAt"`
+	BumpedAt                       string        `json:"bumpedAt"`
+	StorageFreeDays                int32         `json:"storageFreeDays"`
+	ConditionTagIds                string        `json:"conditionTagIds"`
+	ConditionLogo                  int32         `json:"conditionLogo"`
+	NumberOfVents                  int32         `json:"numberOfVents"`
+	DealCount                      int32         `json:"dealCount"`
+	CscExpiresOn                   string        `json:"cscExpiresOn"`
+	EstimatedEmptyDeliveryDateTo   string        `json:"estimatedEmptyDeliveryDateTo"`
+	InstantSale                    bool          `json:"instantSale"`
+	ConsignorId                    int32         `json:"consignorId"`
+	ConsignorName                  string        `json:"consignorName"`
+	Label                          string        `json:"label"`
+	DropoffLocationIds             string        `json:"dropoffLocationIds"`
+	PickupLocationIds              string        `json:"pickupLocationIds"`
+	OriginalPrice                  float32       `json:"originalPrice"`
+	IsSpecialOffer                 bool          `json:"isSpecialOffer"`
+	SourceProposalId               int32         `json:"sourceProposalId"`
+	IsExpired                      bool          `json:"isExpired"`
+	DataSource                     int32         `json:"dataSource"`
+	Meta                           string        `json:"meta"`
+	IsNonNegotiable                bool          `json:"isNonNegotiable"`
+	HasDamages                     bool          `json:"hasDamages"`
+	WithEasyOpenDoor               bool          `json:"withEasyOpenDoor"`
+	CompanyInfo                    *CompanyInfo  `json:"companyInfo,optional"`  // 公司信息详情
+	DepotInfo                      *DepotInfo    `json:"depotInfo,optional"`    // 堆场信息详情
+	LocationInfo                   *LocationInfo `json:"locationInfo,optional"` // 地理位置树节点信息详情
 }
 
 type TradingListReq struct {

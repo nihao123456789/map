@@ -11,6 +11,7 @@ import (
 	"map-server/internal/model/mysql/map_server/vipplans"
 	"map-server/internal/model/mysql/map_server/membershippurchases"
 	"map-server/internal/model/mysql/map_server/depots"
+	"map-server/internal/model/mysql/map_server/treenodes"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -167,6 +168,30 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		}
 	}
 
+	// 收集并去重有效的 location_id，进行批量拉取地理位置信息，规避 N+1 SQL 慢查询
+	locationIdsMap := make(map[int64]struct{})
+	for _, item := range offersData {
+		if item.LocationId.Valid && item.LocationId.Int64 > 0 {
+			locationIdsMap[item.LocationId.Int64] = struct{}{}
+		}
+	}
+
+	var locationsMap = make(map[int64]*treenodes.TreeNodes)
+	if len(locationIdsMap) > 0 {
+		locationIds := make([]int64, 0, len(locationIdsMap))
+		for id := range locationIdsMap {
+			locationIds = append(locationIds, id)
+		}
+		locationsData, err := l.svcCtx.TreeNodesModel.FindByIds(l.ctx, locationIds)
+		if err != nil {
+			l.Errorf("批量拉取地理位置树节点信息失败: %v", err)
+			return nil, err
+		}
+		for _, node := range locationsData {
+			locationsMap[node.Id] = node
+		}
+	}
+
 	// 转换为 API 响应所定义的 OfferInfo 列表，采用容量预分配降低 GC 压力
 	offersList := make([]types.OfferInfo, 0, len(offersData))
 	for _, item := range offersData {
@@ -180,6 +205,11 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		if item.DepotId.Valid && item.DepotId.Int64 > 0 {
 			if dep, exists := depotsMap[item.DepotId.Int64]; exists {
 				info.DepotInfo = toDepotInfo(dep)
+			}
+		}
+		if item.LocationId.Valid && item.LocationId.Int64 > 0 {
+			if loc, exists := locationsMap[item.LocationId.Int64]; exists {
+				info.LocationInfo = toLocationInfo(loc)
 			}
 		}
 		offersList = append(offersList, info)
@@ -369,6 +399,24 @@ func toDepotInfo(item *depots.Depots) *types.DepotInfo {
 		AddressLine2: item.AddressLine2.String,
 		Lat:          float32(item.Lat.Float64),
 		Lng:          float32(item.Lng.Float64),
+	}
+}
+
+// toLocationInfo 将数据库 treenodes 模型转换为 API 层的 LocationInfo 实体
+func toLocationInfo(item *treenodes.TreeNodes) *types.LocationInfo {
+	if item == nil {
+		return nil
+	}
+	return &types.LocationInfo{
+		Id:          item.Id,
+		Name:        item.Name.String,
+		Type:        item.Type.String,
+		EnglishName: item.EnglishName.String,
+		Lat:         float32(item.Lat.Float64),
+		Lng:         float32(item.Lng.Float64),
+		Level:       int32(item.Level),
+		FullName:    item.FullName.String,
+		FullNameCn:  item.FullNameCn.String,
 	}
 }
 
