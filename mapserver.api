@@ -20,5 +20,9 @@ service mapserver {
 	// 获取集装箱交易挂单列表
 	@handler GetTradingsListHandler
 	post /api/tradings/list (TradingListReq) returns (TradingListResp)
+
+	// 批量获取系统字典数据
+	@handler GetEnumsBatchHandler
+	post /api/enums/batch (EnumsBatchReq) returns (EnumsBatchResp)
 }
 

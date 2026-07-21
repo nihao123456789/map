@@ -21,6 +21,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Path:    "/api/tradings/list",
 					Handler: GetTradingsListHandler(serverCtx),
 				},
+				{
+					Method:  http.MethodPost,
+					Path:    "/api/enums/batch",
+					Handler: GetEnumsBatchHandler(serverCtx),
+				},
 			}...,
 		),
 	)

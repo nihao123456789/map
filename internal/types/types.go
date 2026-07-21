@@ -191,3 +191,24 @@ type ConditionInfo struct {
 	Extra         string `json:"extra"`
 }
 
+type EnumItem struct {
+	Id            int64  `json:"id"`
+	Category      string `json:"category"`
+	CategoryName  string `json:"category_name"`
+	ItemId        string `json:"item_id"`
+	Value         string `json:"value"`
+	Name          string `json:"name"`
+	NameZh        string `json:"name_zh"`
+	Description   string `json:"description"`
+	DescriptionZh string `json:"description_zh"`
+	Extra         string `json:"extra"`
+}
+
+type EnumsBatchReq struct {
+	Categories []string `json:"categories"` // 字典分类列表，如 ["conditions", "colors"]
+}
+
+type EnumsBatchResp struct {
+	Enums map[string][]EnumItem `json:"enums"` // 按 category 分组的字典映射
+}
+

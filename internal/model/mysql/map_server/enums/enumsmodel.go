@@ -17,6 +17,8 @@ type (
 		FindOneByCategoryAndValue(ctx context.Context, category, value string) (*Enums, error)
 		// FindByCategoryAndItemIds 根据分类和ID列表批量查找字典项记录
 		FindByCategoryAndItemIds(ctx context.Context, category string, itemIds []string) ([]*Enums, error)
+		// FindByCategories 根据分类列表批量查找所有相关的字典项记录
+		FindByCategories(ctx context.Context, categories []string) ([]*Enums, error)
 	}
 
 	customEnumsModel struct {
