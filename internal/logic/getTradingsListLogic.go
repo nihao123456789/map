@@ -63,6 +63,39 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		dbCategory = 0
 	}
 
+	// 解析 condition 箱况：brand_new -> 50, excellent -> 60, cargo_worthy -> 30, wwt -> 20, as_is -> 10, 其他 -> 0
+	var dbCondition int64
+	switch req.Condition {
+	case "brand_new":
+		dbCondition = 50
+	case "excellent":
+		dbCondition = 60
+	case "cargo_worthy":
+		dbCondition = 30
+	case "wwt":
+		dbCondition = 20
+	case "as_is":
+		dbCondition = 10
+	default:
+		dbCondition = 0
+	}
+
+	// 解析 color 颜色：RAL 编码格式，映射为对应 ID 数值
+	var dbColor int64
+	var colorMap = map[string]int64{
+		"RAL 1015": 10,
+		"RAL 5010": 20,
+		"RAL 3009": 30,
+		"RAL 7035": 40,
+		"RAL 5013": 50,
+		"RAL 9003": 60,
+		"RAL 7015": 70,
+		"RAL 9010": 80,
+	}
+	if val, exists := colorMap[req.Color]; exists {
+		dbColor = val
+	}
+
 	// 游标分页限制机制，防范海量数据查询导致内存溢出 (OOM) 与 GC 压力
 	limit := req.PageSize
 	if limit <= 0 {
@@ -72,14 +105,14 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 	}
 
 	// 统计满足条件的挂单总记录数
-	totalCount, err := l.svcCtx.OffersModel.CountByLocationIdAndDirection(l.ctx, req.LocationId, dbDirection, dbCategory)
+	totalCount, err := l.svcCtx.OffersModel.CountByLocationIdAndDirection(l.ctx, req.LocationId, dbDirection, dbCategory, dbCondition, dbColor)
 	if err != nil {
 		l.Errorf("统计挂单总数失败: %v", err)
 		return nil, err
 	}
 
 	// 从 MySQL 中查询挂单列表（支持游标分页）
-	offersData, err := l.svcCtx.OffersModel.FindByLocationIdAndDirection(l.ctx, req.LocationId, dbDirection, dbCategory, req.LastId, limit)
+	offersData, err := l.svcCtx.OffersModel.FindByLocationIdAndDirection(l.ctx, req.LocationId, dbDirection, dbCategory, dbCondition, dbColor, req.LastId, limit)
 	if err != nil {
 		l.Errorf("查询挂单列表失败: %v", err)
 		return nil, err

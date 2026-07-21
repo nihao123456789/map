@@ -9,3 +9,6 @@ logs/
 README.md
 swagger.json
 deploy_guide.md
+enums.json
+run.ps1
+.gocache/

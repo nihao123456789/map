@@ -39,7 +39,7 @@ type DepotInfo struct {
 
 type LocationInfo struct {
 	Id          int64   `json:"id"`
-	Name        string  `json:"name"`
+	Name        string  `json:"name"` // 区域英文缩写名
 	Type        string  `json:"type"`
 	EnglishName string  `json:"englishName"`
 	Lat         float32 `json:"lat"`
@@ -161,6 +161,8 @@ type TradingListReq struct {
 	LocationId int64  `json:"location_id,optional"`
 	Direction  string `json:"direction"`
 	Category   string `json:"category,optional"`  // 箱型分类：dry (干箱)，tank (罐箱)
+	Condition  string `json:"condition,optional"` // 箱况：brand_new, excellent, cargo_worthy, wwt, as_is
+	Color      string `json:"color,optional"`     // 颜色：如 RAL 1015, RAL 5010 等
 	LastId     int64  `json:"last_id,optional"`   // 游标分页：上一页最后一条记录的ID
 	PageSize   int64  `json:"page_size,optional"` // 每页数量
 }

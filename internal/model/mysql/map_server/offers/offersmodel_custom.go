@@ -10,7 +10,7 @@ const offersRowsCustom = "`id`,`condition`,`type`,`pickup_location_id`,`dropoff_
 
 // FindByLocationIdAndDirection 根据位置ID和交易方向查询有效的买卖交易挂单列表（状态为启用且未过期，且未被逻辑删除的数据）。
 // 支持游标分页：如果传入 lastId > 0，则只获取排序在该记录之后的挂单数据。
-func (m *customOffersModel) FindByLocationIdAndDirection(ctx context.Context, locationId int64, direction int64, category int64, lastId int64, limit int64) ([]*Offers, error) {
+func (m *customOffersModel) FindByLocationIdAndDirection(ctx context.Context, locationId int64, direction int64, category int64, condition int64, color int64, lastId int64, limit int64) ([]*Offers, error) {
 	var query string
 	var args []interface{}
 
@@ -35,6 +35,18 @@ func (m *customOffersModel) FindByLocationIdAndDirection(ctx context.Context, lo
 		args = append(args, category)
 	}
 
+	// 如果 condition > 0，则追加 condition 箱况条件进行过滤
+	if condition > 0 {
+		baseWhere += " and `condition` = ?"
+		args = append(args, condition)
+	}
+
+	// 如果 color > 0，则追加 color 颜色条件进行过滤
+	if color > 0 {
+		baseWhere += " and `color` = ?"
+		args = append(args, color)
+	}
+
 	// 游标式分页限制
 	if lastId > 0 {
 		baseWhere += " and (`bumped_at` < (select `bumped_at` from `offers` where `id` = ?) or (`bumped_at` = (select `bumped_at` from `offers` where `id` = ?) and `id` < ?))"
@@ -57,8 +69,8 @@ func (m *customOffersModel) FindByLocationIdAndDirection(ctx context.Context, lo
 	return resp, nil
 }
 
-// CountByLocationIdAndDirection 根据位置ID、交易方向和箱型分类统计符合条件的交易挂单总数
-func (m *customOffersModel) CountByLocationIdAndDirection(ctx context.Context, locationId int64, direction int64, category int64) (int64, error) {
+// CountByLocationIdAndDirection 根据位置ID、交易方向、箱型分类、箱况和颜色统计符合条件的交易挂单总数
+func (m *customOffersModel) CountByLocationIdAndDirection(ctx context.Context, locationId int64, direction int64, category int64, condition int64, color int64) (int64, error) {
 	var query string
 	var args []interface{}
 
@@ -81,6 +93,18 @@ func (m *customOffersModel) CountByLocationIdAndDirection(ctx context.Context, l
 	if category > 0 {
 		baseWhere += " and `category` = ?"
 		args = append(args, category)
+	}
+
+	// 如果 condition > 0，则追加 condition 统计过滤
+	if condition > 0 {
+		baseWhere += " and `condition` = ?"
+		args = append(args, condition)
+	}
+
+	// 如果 color > 0，则追加 color 统计过滤
+	if color > 0 {
+		baseWhere += " and `color` = ?"
+		args = append(args, color)
 	}
 
 	query = fmt.Sprintf("select count(*) from %s %s", m.table, baseWhere)
