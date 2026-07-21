@@ -10,7 +10,7 @@ const offersRowsCustom = "`id`,`condition`,`type`,`pickup_location_id`,`dropoff_
 
 // FindByLocationIdAndDirection 根据位置ID和交易方向查询有效的买卖交易挂单列表（状态为启用且未过期，且未被逻辑删除的数据）。
 // 支持游标分页：如果传入 lastId > 0，则只获取排序在该记录之后的挂单数据。
-func (m *customOffersModel) FindByLocationIdAndDirection(ctx context.Context, locationId int64, direction int64, lastId int64, limit int64) ([]*Offers, error) {
+func (m *customOffersModel) FindByLocationIdAndDirection(ctx context.Context, locationId int64, direction int64, category int64, lastId int64, limit int64) ([]*Offers, error) {
 	var query string
 	var args []interface{}
 
@@ -27,6 +27,12 @@ func (m *customOffersModel) FindByLocationIdAndDirection(ctx context.Context, lo
 	if locationId > 0 {
 		baseWhere += " and `location_id` = ?"
 		args = append(args, locationId)
+	}
+
+	// 如果 category > 0，则追加 category 箱型分类条件进行过滤
+	if category > 0 {
+		baseWhere += " and `category` = ?"
+		args = append(args, category)
 	}
 
 	// 游标式分页限制
@@ -51,8 +57,8 @@ func (m *customOffersModel) FindByLocationIdAndDirection(ctx context.Context, lo
 	return resp, nil
 }
 
-// CountByLocationIdAndDirection 根据位置ID和交易方向统计符合条件的交易挂单总数
-func (m *customOffersModel) CountByLocationIdAndDirection(ctx context.Context, locationId int64, direction int64) (int64, error) {
+// CountByLocationIdAndDirection 根据位置ID、交易方向和箱型分类统计符合条件的交易挂单总数
+func (m *customOffersModel) CountByLocationIdAndDirection(ctx context.Context, locationId int64, direction int64, category int64) (int64, error) {
 	var query string
 	var args []interface{}
 
@@ -69,6 +75,12 @@ func (m *customOffersModel) CountByLocationIdAndDirection(ctx context.Context, l
 	if locationId > 0 {
 		baseWhere += " and `location_id` = ?"
 		args = append(args, locationId)
+	}
+
+	// 如果 category > 0，则追加 category 统计过滤
+	if category > 0 {
+		baseWhere += " and `category` = ?"
+		args = append(args, category)
 	}
 
 	query = fmt.Sprintf("select count(*) from %s %s", m.table, baseWhere)

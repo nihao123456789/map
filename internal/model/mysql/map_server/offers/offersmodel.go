@@ -13,11 +13,10 @@ type (
 	OffersModel interface {
 		offersModel
 		withSession(session sqlx.Session) OffersModel
-		// FindByLocationIdAndDirection 根据位置ID和交易方向查询买卖交易挂单列表（支持游标分页）
-		// 参数 direction 可取值：DirectionBuy (买入) 或 DirectionSell (卖出)
-		FindByLocationIdAndDirection(ctx context.Context, locationId int64, direction int64, lastId int64, limit int64) ([]*Offers, error)
-		// CountByLocationIdAndDirection 根据位置ID和交易方向统计符合条件的交易挂单总数
-		CountByLocationIdAndDirection(ctx context.Context, locationId int64, direction int64) (int64, error)
+		// FindByLocationIdAndDirection 根据位置ID、交易方向和箱型分类查询买卖交易挂单列表（支持游标分页）
+		FindByLocationIdAndDirection(ctx context.Context, locationId int64, direction int64, category int64, lastId int64, limit int64) ([]*Offers, error)
+		// CountByLocationIdAndDirection 根据位置ID、交易方向和箱型分类统计符合条件的交易挂单总数
+		CountByLocationIdAndDirection(ctx context.Context, locationId int64, direction int64, category int64) (int64, error)
 	}
 
 	customOffersModel struct {
