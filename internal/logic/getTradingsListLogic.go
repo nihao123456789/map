@@ -59,6 +59,13 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		limit = 100 // 最大限制单页100条
 	}
 
+	// 统计满足条件的挂单总记录数
+	totalCount, err := l.svcCtx.OffersModel.CountByLocationIdAndDirection(l.ctx, req.LocationId, dbDirection)
+	if err != nil {
+		l.Errorf("统计挂单总数失败: %v", err)
+		return nil, err
+	}
+
 	// 从 MySQL 中查询挂单列表（支持游标分页）
 	offersData, err := l.svcCtx.OffersModel.FindByLocationIdAndDirection(l.ctx, req.LocationId, dbDirection, req.LastId, limit)
 	if err != nil {
@@ -174,6 +181,7 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 	}
 
 	return &types.TradingListResp{
+		Total:    totalCount,
 		LastId:   lastId,
 		PageSize: limit,
 		List:     offersList,

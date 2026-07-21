@@ -154,8 +154,8 @@ type (
 		ExpiresAt   string `json:"expiresAt"`   // 过期时间，RFC3339 格式
 	}
 
-	// TradingListResp 交易挂单列表响应结果
 	TradingListResp {
+		Total    int64       `json:"total"`    // 总数量
 		LastId   int64       `json:"lastId"`   // 最后一条记录的ID
 		PageSize int64       `json:"pageSize"` // 每页数量
 		List     []OfferInfo `json:"list"`     // list列表

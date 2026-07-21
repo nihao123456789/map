@@ -50,3 +50,33 @@ func (m *customOffersModel) FindByLocationIdAndDirection(ctx context.Context, lo
 	}
 	return resp, nil
 }
+
+// CountByLocationIdAndDirection 根据位置ID和交易方向统计符合条件的交易挂单总数
+func (m *customOffersModel) CountByLocationIdAndDirection(ctx context.Context, locationId int64, direction int64) (int64, error) {
+	var query string
+	var args []interface{}
+
+	// 基础过滤条件，过滤 Trading 挂单、对应方向、已发布 (status=10)、且未过期 (is_expired=0) 并过滤物理删除
+	baseWhere := fmt.Sprintf(
+		"where `type` = '%s' and `direction` = ? and `status` = %d and `is_expired` = %d and `deleted_at` is null",
+		OfferTypeTrading,
+		OfferStatusPublished,
+		OfferNotExpired,
+	)
+	args = append(args, direction)
+
+	// 如果 locationId > 0，则追加 location_id 统计过滤；否则不限位置
+	if locationId > 0 {
+		baseWhere += " and `location_id` = ?"
+		args = append(args, locationId)
+	}
+
+	query = fmt.Sprintf("select count(*) from %s %s", m.table, baseWhere)
+
+	var total int64
+	err := m.conn.QueryRowCtx(ctx, &total, query, args...)
+	if err != nil {
+		return 0, fmt.Errorf("OffersModel.CountByLocationIdAndDirection 统计失败: %w", err)
+	}
+	return total, nil
+}

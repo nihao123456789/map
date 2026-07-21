@@ -152,6 +152,7 @@ type TradingListReq struct {
 }
 
 type TradingListResp struct {
+	Total    int64       `json:"total"`    // 总数量
 	LastId   int64       `json:"lastId"`   // 最后一条记录的ID
 	PageSize int64       `json:"pageSize"` // 每页数量
 	List     []OfferInfo `json:"list"`     // list列表
