@@ -2,10 +2,14 @@ package logic_test
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/rest"
@@ -95,3 +99,66 @@ func TestRunServer(t *testing.T) {
 	// 启动 HTTP 服务，阻塞直到收到退出信号
 	server.Start()
 }
+
+// TestGetTradingsList_Signature 验证 API 安全签名验证中间件（正常通过、缺失参数被拦截、签名不匹配被拦截及防重放拦截）。
+func TestGetTradingsList_Signature(t *testing.T) {
+	var c config.Config
+	conf.MustLoad("d:/project/map/etc/mapserver-dev.yaml", &c)
+
+	// 使用开发环境配置的秘钥实例化签名验证中间件
+	signMiddleware := middleware.NewSignatureMiddleware(c.SignatureSecret)
+
+	// 模拟后续 Handler 处理器
+	var handlerCalled bool
+	testHandler := func(w http.ResponseWriter, r *http.Request) {
+		handlerCalled = true
+	}
+
+	// 1. 缺失 X-Timestamp 校验拦截
+	req1, _ := http.NewRequest("POST", "/api/tradings/list", nil)
+	w1 := httptest.NewRecorder()
+	handlerCalled = false
+	signMiddleware.Handle(testHandler)(w1, req1)
+	if handlerCalled {
+		t.Error("缺失 X-Timestamp 请求头时，中间件不应该放行")
+	}
+	if w1.Code != http.StatusUnauthorized {
+		t.Errorf("期望状态码 401，实际得到: %d", w1.Code)
+	}
+
+	// 2. 签名内容错误拦截
+	req2, _ := http.NewRequest("POST", "/api/tradings/list", nil)
+	req2.Header.Set("X-Timestamp", fmt.Sprintf("%d", time.Now().Unix()))
+	req2.Header.Set("X-Nonce", "randomNonceValue")
+	req2.Header.Set("X-Signature", "invalidSignatureString")
+	w2 := httptest.NewRecorder()
+	handlerCalled = false
+	signMiddleware.Handle(testHandler)(w2, req2)
+	if handlerCalled {
+		t.Error("签名错误时，中间件不应该放行")
+	}
+	if w2.Code != http.StatusUnauthorized {
+		t.Errorf("期望状态码 401，实际得到: %d", w2.Code)
+	}
+
+	// 3. 正确签名信息通过放行
+	req3, _ := http.NewRequest("POST", "/api/tradings/list", nil)
+	timestampStr := fmt.Sprintf("%d", time.Now().Unix())
+	nonce := "uniqueNonceStr"
+	req3.Header.Set("X-Timestamp", timestampStr)
+	req3.Header.Set("X-Nonce", nonce)
+
+	rawStr := fmt.Sprintf("timestamp=%s&nonce=%s&secret=%s", timestampStr, nonce, c.SignatureSecret)
+	hash := sha256.New()
+	hash.Write([]byte(rawStr))
+	signature := hex.EncodeToString(hash.Sum(nil))
+	req3.Header.Set("X-Signature", signature)
+
+	w3 := httptest.NewRecorder()
+	handlerCalled = false
+	signMiddleware.Handle(testHandler)(w3, req3)
+	if !handlerCalled {
+		t.Error("签名正确时，中间件应该放行")
+	}
+}
+

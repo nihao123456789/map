@@ -13,6 +13,9 @@ info (
 )
 
 // 定义地图查询服务
+@server (
+	middleware: SignatureMiddleware
+)
 service mapserver {
 	// 获取集装箱交易挂单列表
 	@handler GetTradingsListHandler

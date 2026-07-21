@@ -24,6 +24,9 @@ type Config struct {
 
 	// PostgreSQL 连接配置（PostGIS 精确空间查询）
 	PostgreSQL PostgreSQLConf
+
+	// SignatureSecret 是接口签名校验的盐值/密钥
+	SignatureSecret string
 }
 
 // MySQLConf 是 MySQL 数据库的连接配置。

@@ -2,6 +2,7 @@
 Name: mapserver
 Host: 0.0.0.0
 Port: 8080
+SignatureSecret: "MapServerSecretKey2026"
 
 # MySQL 数据库配置（业务数据存储）
 MySQL:

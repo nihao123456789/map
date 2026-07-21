@@ -15,6 +15,7 @@ import (
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 
 	"map-server/internal/config"
+	"map-server/internal/middleware"
 	mysqlModel "map-server/internal/model/mysql/map_server"
 	"map-server/internal/model/mysql/map_server/offers"
 	"map-server/internal/model/mysql/map_server/companies"
@@ -23,6 +24,8 @@ import (
 	"map-server/internal/model/mysql/map_server/depots"
 	"map-server/internal/model/mysql/map_server/treenodes"
 	postgisModel "map-server/internal/model/postgis/map_server"
+
+	"github.com/zeromicro/go-zero/rest"
 )
 
 // ServiceContext 是服务的全局上下文，持有所有依赖的客户端实例。
@@ -70,6 +73,9 @@ type ServiceContext struct {
 
 	// PostGISContainerModel 提供 PostgreSQL 集装箱空间查询（BBox/Radius）
 	PostGISContainerModel *postgisModel.PostGISContainerModel
+
+	// SignatureMiddleware 签名校验路由中间件
+	SignatureMiddleware rest.Middleware
 }
 
 // NewServiceContext 初始化并返回 ServiceContext。
@@ -161,6 +167,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		MembershipPurchasesModel: membershippurchasesModel,
 		DepotsModel:              depotsModel,
 		TreeNodesModel:           treenodesModel,
+		SignatureMiddleware:      middleware.NewSignatureMiddleware(c.SignatureSecret).Handle,
 	}
 }
 

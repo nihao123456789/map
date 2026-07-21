@@ -13,12 +13,15 @@ import (
 
 func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
-		[]rest.Route{
-			{
-				Method:  http.MethodPost,
-				Path:    "/api/tradings/list",
-				Handler: GetTradingsListHandler(serverCtx),
-			},
-		},
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.SignatureMiddleware},
+			[]rest.Route{
+				{
+					Method:  http.MethodPost,
+					Path:    "/api/tradings/list",
+					Handler: GetTradingsListHandler(serverCtx),
+				},
+			}...,
+		),
 	)
 }
