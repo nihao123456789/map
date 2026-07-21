@@ -81,8 +81,6 @@ func main() {
 
 	// 打印启动信息
 	fmt.Printf("地图服务启动成功，监听地址：%s:%d\n", c.Host, c.Port)
-	fmt.Println("接口列表：")
-	fmt.Println("  POST /api/tradings/list - 获取集装箱交易挂单列表（支持去重关联企业信息与会员徽章）")
 
 	// 启动 HTTP 服务，阻塞直到收到退出信号
 	server.Start()

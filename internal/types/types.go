@@ -205,7 +205,7 @@ type EnumItem struct {
 }
 
 type EnumsBatchReq struct {
-	Categories []string `json:"categories"` // 字典分类列表，如 ["conditions", "colors"]
+	Categories []string `json:"categories,optional"` // 字典分类列表，如 ["conditions", "colors"]
 }
 
 type EnumsBatchResp struct {

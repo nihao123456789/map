@@ -122,7 +122,10 @@ func (m *customEnumsModel) FindByCategoryAndItemIds(ctx context.Context, categor
 
 func (m *customEnumsModel) FindByCategories(ctx context.Context, categories []string) ([]*Enums, error) {
 	if len(categories) == 0 {
-		return nil, nil
+		query := fmt.Sprintf("select %s from %s", enumsRows, m.table)
+		var resp []*Enums
+		err := m.conn.QueryRowsCtx(ctx, &resp, query)
+		return resp, err
 	}
 	placeholders := make([]string, len(categories))
 	args := make([]interface{}, len(categories))

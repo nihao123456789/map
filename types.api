@@ -212,7 +212,7 @@ type (
 
 	// EnumsBatchReq 批量字典查询请求
 	EnumsBatchReq {
-		Categories []string `json:"categories"` // 字典分类列表，如 ["conditions", "colors"]
+		Categories []string `json:"categories,optional"` // 字典分类列表，如 ["conditions", "colors"]
 	}
 
 	// EnumsBatchResp 批量字典查询响应
