@@ -234,6 +234,30 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		}
 	}
 
+	// 收集并去重有效的 condition（箱况 ID），以批量拉取字典数据，规避 N+1 SQL 慢查询
+	conditionIdsMap := make(map[string]struct{})
+	for _, item := range offersData {
+		if item.Condition.Valid && item.Condition.Int64 > 0 {
+			conditionIdsMap[strconv.FormatInt(item.Condition.Int64, 10)] = struct{}{}
+		}
+	}
+
+	var conditionsMap = make(map[string]*types.ConditionInfo)
+	if len(conditionIdsMap) > 0 {
+		conditionIds := make([]string, 0, len(conditionIdsMap))
+		for id := range conditionIdsMap {
+			conditionIds = append(conditionIds, id)
+		}
+		enumsData, err := l.svcCtx.EnumsModel.FindByCategoryAndItemIds(l.ctx, enums.CategoryConditions, conditionIds)
+		if err != nil {
+			l.Errorf("批量拉取箱况字典数据失败: %v", err)
+			return nil, err
+		}
+		for _, val := range enumsData {
+			conditionsMap[val.ItemId] = toConditionInfo(val)
+		}
+	}
+
 	// 转换为 API 响应所定义的 OfferInfo 列表，采用容量预分配降低 GC 压力
 	offersList := make([]types.OfferInfo, 0, len(offersData))
 	for _, item := range offersData {
@@ -252,6 +276,12 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		if item.LocationId.Valid && item.LocationId.Int64 > 0 {
 			if loc, exists := locationsMap[item.LocationId.Int64]; exists {
 				info.LocationInfo = toLocationInfo(loc)
+			}
+		}
+		if item.Condition.Valid && item.Condition.Int64 > 0 {
+			idStr := strconv.FormatInt(item.Condition.Int64, 10)
+			if cond, exists := conditionsMap[idStr]; exists {
+				info.ConditionInfo = cond
 			}
 		}
 		offersList = append(offersList, info)
@@ -459,6 +489,25 @@ func toLocationInfo(item *treenodes.TreeNodes) *types.LocationInfo {
 		Level:       int32(item.Level),
 		FullName:    item.FullName.String,
 		FullNameCn:  item.FullNameCn.String,
+	}
+}
+
+// toConditionInfo 将 enums 数据库模型转换为 API 层的 ConditionInfo 实体
+func toConditionInfo(item *enums.Enums) *types.ConditionInfo {
+	if item == nil {
+		return nil
+	}
+	return &types.ConditionInfo{
+		Id:            item.Id,
+		Category:      item.Category,
+		CategoryName:  item.CategoryName,
+		ItemId:        item.ItemId,
+		Value:         item.Value,
+		Name:          item.Name,
+		NameZh:        item.NameZh,
+		Description:   item.Description,
+		DescriptionZh: item.DescriptionZh,
+		Extra:         item.Extra,
 	}
 }
 

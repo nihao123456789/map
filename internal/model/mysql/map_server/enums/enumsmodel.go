@@ -15,6 +15,8 @@ type (
 		withSession(session sqlx.Session) EnumsModel
 		// FindOneByCategoryAndValue 根据分类和值查找单条字典项记录
 		FindOneByCategoryAndValue(ctx context.Context, category, value string) (*Enums, error)
+		// FindByCategoryAndItemIds 根据分类和ID列表批量查找字典项记录
+		FindByCategoryAndItemIds(ctx context.Context, category string, itemIds []string) ([]*Enums, error)
 	}
 
 	customEnumsModel struct {

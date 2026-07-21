@@ -102,3 +102,20 @@ func (m *customEnumsModel) FindOneByCategoryAndValue(ctx context.Context, catego
 		return nil, err
 	}
 }
+
+func (m *customEnumsModel) FindByCategoryAndItemIds(ctx context.Context, category string, itemIds []string) ([]*Enums, error) {
+	if len(itemIds) == 0 {
+		return nil, nil
+	}
+	placeholders := make([]string, len(itemIds))
+	args := make([]interface{}, 0, len(itemIds)+1)
+	args = append(args, category)
+	for i, id := range itemIds {
+		placeholders[i] = "?"
+		args = append(args, id)
+	}
+	query := fmt.Sprintf("select %s from %s where `category` = ? and `item_id` in (%s)", enumsRows, m.table, strings.Join(placeholders, ","))
+	var resp []*Enums
+	err := m.conn.QueryRowsCtx(ctx, &resp, query, args...)
+	return resp, err
+}

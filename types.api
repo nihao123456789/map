@@ -1,4 +1,4 @@
-﻿// API 语法版本
+// API 语法版本
 syntax = "v1"
 
 type (
@@ -19,7 +19,7 @@ type (
 	// OfferInfo 挂单详情
 	OfferInfo {
 		Id                             int64   `json:"id"`
-		Condition                      int32   `json:"condition"`
+		Condition                      int32   `json:"condition"` // 箱况
 		Type                           string  `json:"type"`
 		PickupLocationId               int32   `json:"pickup_location_id"`
 		DropoffLocationId              int32   `json:"dropoff_location_id"`
@@ -114,6 +114,7 @@ type (
 		CompanyInfo                    *CompanyInfo  `json:"company_info,optional"` // 公司信息详情
 		DepotInfo                      *DepotInfo    `json:"depot_info,optional"`   // 堆场信息详情
 		LocationInfo                   *LocationInfo `json:"location_info,optional"` // 地理位置树节点信息详情
+		ConditionInfo                  *ConditionInfo `json:"condition_info,optional"` // 箱况详细信息详情
 	}
 
 	// LocationInfo 地理位置树节点信息
@@ -172,6 +173,20 @@ type (
 		NameEn      string `json:"name_en"`      // 会员英文名称
 		DisplayName string `json:"display_name"` // 徽章展示名称
 		ExpiresAt   string `json:"expires_at"`   // 过期时间，RFC3339 格式
+	}
+
+	// ConditionInfo 箱况详细信息
+	ConditionInfo {
+		Id            int64  `json:"id"`
+		Category      string `json:"category"`
+		CategoryName  string `json:"category_name"`
+		ItemId        string `json:"item_id"`
+		Value         string `json:"value"`
+		Name          string `json:"name"`
+		NameZh        string `json:"name_zh"`
+		Description   string `json:"description"`
+		DescriptionZh string `json:"description_zh"`
+		Extra         string `json:"extra"`
 	}
 
 	TradingListResp {
