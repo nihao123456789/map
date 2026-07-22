@@ -24,11 +24,11 @@ type (
 		// PickupLocationId               int32   `json:"pickup_location_id"`
 		// DropoffLocationId              int32   `json:"dropoff_location_id"`
 		Quantity                       int32   `json:"quantity"` // 集装箱数量
-		PickupCharge                   float32 `json:"pickup_charge"`
-		FreeDays                       int32   `json:"free_days"`
-		PerDiems                       float32 `json:"per_diems"`
-		StorageFee                     float32 `json:"storage_fee"`
-		Dpp                            float32 `json:"dpp"`
+		// PickupCharge                   float32 `json:"pickup_charge"`
+		// FreeDays                       int32   `json:"free_days"`
+		// PerDiems                       float32 `json:"per_diems"`
+		// StorageFee                     float32 `json:"storage_fee"`
+		// Dpp                            float32 `json:"dpp"`
 		Premium                        float32 `json:"premium"`
 		NewBuildPrice                  float32 `json:"new_build_price"`
 		DepreciationPerYear            float32 `json:"depreciation_per_year"`
@@ -77,7 +77,7 @@ type (
 		EstimatedEmptyDeliveryDateFrom string  `json:"estimated_empty_delivery_date_from"`
 		OfferType                      int32   `json:"offer_type"`
 		Source                         int32   `json:"source"`
-		PickupChargePayer              int32   `json:"pickup_charge_payer"`
+		// PickupChargePayer              int32   `json:"pickup_charge_payer"`
 		InsuranceFee                   float32 `json:"insurance_fee"`
 		YearOfManufactureRangeFrom     int32   `json:"year_of_manufacture_range_from"` // 要求出厂年份起
 		YearOfManufactureRangeTo       int32   `json:"year_of_manufacture_range_to"` // 要求出厂年份止
