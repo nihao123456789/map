@@ -45,9 +45,9 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 	// 根据 direction 映射数据库中的整数 direction 值
 	var dbDirection int64
 	switch req.Direction {
-	case "supply":
+	case offers.ClientDirectionSupply:
 		dbDirection = offers.DirectionBuy
-	case "demand":
+	case offers.ClientDirectionDemand:
 		dbDirection = offers.DirectionSell
 	default:
 		l.Errorf("无效的交易方向参数: %s", req.Direction)

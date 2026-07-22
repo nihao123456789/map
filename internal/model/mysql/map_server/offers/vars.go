@@ -14,6 +14,11 @@ const (
 	// DirectionSell 代表卖出方向挂单（对应客户端入参 demand）
 	DirectionSell = 1
 
+	// ClientDirectionSupply 客户端传入的供应方向字符串
+	ClientDirectionSupply = "supply"
+	// ClientDirectionDemand 客户端传入的需求方向字符串
+	ClientDirectionDemand = "demand"
+
 	// OfferNotExpired 代表挂单未过期
 	OfferNotExpired = 0
 	// OfferExpired 代表挂单已过期
