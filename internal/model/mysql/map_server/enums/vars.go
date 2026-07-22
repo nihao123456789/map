@@ -18,4 +18,7 @@ const (
 
 	// CategoryCommercialTerm 代表提箱贸易条款的枚举分类
 	CategoryCommercialTerm = "commercialTerm"
+
+	// CategoryColors 代表颜色的枚举分类
+	CategoryColors = "colors"
 )
