@@ -180,6 +180,7 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 	conditionIdsMap := make(map[string]struct{})
 	equipmentTypeIdsMap := make(map[string]struct{})
 	commercialTermIdsMap := make(map[string]struct{})
+	categoryIdsMap := make(map[string]struct{})
 
 	for _, item := range offersData {
 		if item.CompanyId.Valid && item.CompanyId.Int64 > 0 {
@@ -199,6 +200,9 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		}
 		if item.CommercialTerm > 0 {
 			commercialTermIdsMap[strconv.FormatInt(item.CommercialTerm, 10)] = struct{}{}
+		}
+		if item.Category.Valid && item.Category.Int64 > 0 {
+			categoryIdsMap[strconv.FormatInt(item.Category.Int64, 10)] = struct{}{}
 		}
 	}
 
@@ -336,6 +340,22 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		}
 	}
 
+	var categoriesMap = make(map[string]*types.EnumInfo)
+	if len(categoryIdsMap) > 0 {
+		categoryIds := make([]string, 0, len(categoryIdsMap))
+		for id := range categoryIdsMap {
+			categoryIds = append(categoryIds, id)
+		}
+		enumsData, err := l.svcCtx.EnumsModel.FindByCategoryAndItemIds(l.ctx, enums.CategoryContainerCategory, categoryIds)
+		if err != nil {
+			l.Errorf("批量拉取箱型分类字典数据失败: %v", err)
+			return nil, err
+		}
+		for _, val := range enumsData {
+			categoriesMap[val.ItemId] = toEnumInfo(val)
+		}
+	}
+
 	// 转换为 API 响应所定义的 OfferInfo 列表，采用容量预分配降低 GC 压力
 	offersList := make([]types.OfferInfo, 0, len(offersData))
 	for _, item := range offersData {
@@ -372,6 +392,12 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 			idStr := strconv.FormatInt(item.CommercialTerm, 10)
 			if term, exists := commercialTermsMap[idStr]; exists {
 				info.CommercialTermInfo = term
+			}
+		}
+		if item.Category.Valid && item.Category.Int64 > 0 {
+			idStr := strconv.FormatInt(item.Category.Int64, 10)
+			if cat, exists := categoriesMap[idStr]; exists {
+				info.CategoryInfo = cat
 			}
 		}
 		offersList = append(offersList, info)
