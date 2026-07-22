@@ -536,15 +536,15 @@ func toConditionInfo(item *enums.Enums) *types.ConditionInfo {
 		return nil
 	}
 	return &types.ConditionInfo{
-		Id:            item.Id,
+		// Id:            item.Id,
 		Category:      item.Category,
 		CategoryName:  item.CategoryName,
 		ItemId:        item.ItemId,
 		Value:         item.Value,
 		Name:          item.Name,
 		NameZh:        item.NameZh,
-		Description:   item.Description,
-		DescriptionZh: item.DescriptionZh,
+		// Description:   item.Description,
+		// DescriptionZh: item.DescriptionZh,
 		Extra:         item.Extra,
 	}
 }
