@@ -173,11 +173,24 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		return nil, err
 	}
 
-	// 收集并去重有效的 company_id，防范 N+1 次查询带来的数据库严重压力与 GC 消耗
+	// 收集并去重有效的关联 ID，防范 N+1 次查询带来的数据库严重压力与 GC 消耗
 	companyIdsMap := make(map[int64]struct{})
+	depotIdsMap := make(map[int64]struct{})
+	locationIdsMap := make(map[int64]struct{})
+	conditionIdsMap := make(map[string]struct{})
+
 	for _, item := range offersData {
 		if item.CompanyId.Valid && item.CompanyId.Int64 > 0 {
 			companyIdsMap[item.CompanyId.Int64] = struct{}{}
+		}
+		if item.DepotId.Valid && item.DepotId.Int64 > 0 {
+			depotIdsMap[item.DepotId.Int64] = struct{}{}
+		}
+		if item.LocationId.Valid && item.LocationId.Int64 > 0 {
+			locationIdsMap[item.LocationId.Int64] = struct{}{}
+		}
+		if item.Condition.Valid && item.Condition.Int64 > 0 {
+			conditionIdsMap[strconv.FormatInt(item.Condition.Int64, 10)] = struct{}{}
 		}
 	}
 
@@ -231,13 +244,6 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		}
 	}
 
-	// 收集并去重有效的 depot_id，防范 N+1 次查询带来的数据库严重压力与 GC 消耗
-	depotIdsMap := make(map[int64]struct{})
-	for _, item := range offersData {
-		if item.DepotId.Valid && item.DepotId.Int64 > 0 {
-			depotIdsMap[item.DepotId.Int64] = struct{}{}
-		}
-	}
 
 	var depotsMap = make(map[int64]*depots.Depots)
 	if len(depotIdsMap) > 0 {
@@ -256,13 +262,6 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		}
 	}
 
-	// 收集并去重有效的 location_id，进行批量拉取地理位置信息，规避 N+1 SQL 慢查询
-	locationIdsMap := make(map[int64]struct{})
-	for _, item := range offersData {
-		if item.LocationId.Valid && item.LocationId.Int64 > 0 {
-			locationIdsMap[item.LocationId.Int64] = struct{}{}
-		}
-	}
 
 	var locationsMap = make(map[int64]*treenodes.TreeNodes)
 	if len(locationIdsMap) > 0 {
@@ -280,13 +279,6 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		}
 	}
 
-	// 收集并去重有效的 condition（箱况 ID），以批量拉取字典数据，规避 N+1 SQL 慢查询
-	conditionIdsMap := make(map[string]struct{})
-	for _, item := range offersData {
-		if item.Condition.Valid && item.Condition.Int64 > 0 {
-			conditionIdsMap[strconv.FormatInt(item.Condition.Int64, 10)] = struct{}{}
-		}
-	}
 
 	var conditionsMap = make(map[string]*types.ConditionInfo)
 	if len(conditionIdsMap) > 0 {
