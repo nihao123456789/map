@@ -38,7 +38,7 @@ type (
 		CompanyId                      int32   `json:"company_id"`
 		Direction                      int32   `json:"direction"`
 		// ValidDays                      int32   `json:"valid_days"`
-		EquipmentType                  int32   `json:"equipment_type"`
+		EquipmentType                  int32   `json:"equipment_type"` // 箱型
 		CommercialTerm                 int32   `json:"commercial_term"`
 		Comments                       string  `json:"comments"`
 		ReviewsCount                   int32   `json:"reviews_count"`
@@ -115,6 +115,7 @@ type (
 		DepotInfo                      *DepotInfo    `json:"depot_info,optional"`   // 堆场信息详情
 		LocationInfo                   *LocationInfo `json:"location_info,optional"` // 地理位置树节点信息详情
 		ConditionInfo                  *ConditionInfo `json:"condition_info,optional"` // 箱况详细信息详情
+		EquipmentTypeInfo              *ConditionInfo `json:"equipment_type_info,optional"` // 箱型详细信息详情
 	}
 
 	// LocationInfo 地理位置树节点信息

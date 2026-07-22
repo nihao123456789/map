@@ -158,6 +158,7 @@ type OfferInfo struct {
 	DepotInfo                      *DepotInfo    `json:"depot_info,optional"`    // 堆场信息详情
 	LocationInfo                   *LocationInfo `json:"location_info,optional"` // 地理位置树节点信息详情
 	ConditionInfo                  *ConditionInfo `json:"condition_info,optional"` // 箱况详细信息详情
+	EquipmentTypeInfo              *ConditionInfo `json:"equipment_type_info,optional"` // 箱型详细信息详情
 }
 
 type TradingListReq struct {

@@ -178,6 +178,7 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 	depotIdsMap := make(map[int64]struct{})
 	locationIdsMap := make(map[int64]struct{})
 	conditionIdsMap := make(map[string]struct{})
+	equipmentTypeIdsMap := make(map[string]struct{})
 
 	for _, item := range offersData {
 		if item.CompanyId.Valid && item.CompanyId.Int64 > 0 {
@@ -191,6 +192,9 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		}
 		if item.Condition.Valid && item.Condition.Int64 > 0 {
 			conditionIdsMap[strconv.FormatInt(item.Condition.Int64, 10)] = struct{}{}
+		}
+		if item.EquipmentType > 0 {
+			equipmentTypeIdsMap[strconv.FormatInt(item.EquipmentType, 10)] = struct{}{}
 		}
 	}
 
@@ -296,6 +300,22 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		}
 	}
 
+	var equipmentTypesMap = make(map[string]*types.ConditionInfo)
+	if len(equipmentTypeIdsMap) > 0 {
+		equipmentTypeIds := make([]string, 0, len(equipmentTypeIdsMap))
+		for id := range equipmentTypeIdsMap {
+			equipmentTypeIds = append(equipmentTypeIds, id)
+		}
+		enumsData, err := l.svcCtx.EnumsModel.FindByCategoryAndItemIds(l.ctx, enums.CategoryEquipmentTypes, equipmentTypeIds)
+		if err != nil {
+			l.Errorf("批量拉取箱型字典数据失败: %v", err)
+			return nil, err
+		}
+		for _, val := range enumsData {
+			equipmentTypesMap[val.ItemId] = toConditionInfo(val)
+		}
+	}
+
 	// 转换为 API 响应所定义的 OfferInfo 列表，采用容量预分配降低 GC 压力
 	offersList := make([]types.OfferInfo, 0, len(offersData))
 	for _, item := range offersData {
@@ -320,6 +340,12 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 			idStr := strconv.FormatInt(item.Condition.Int64, 10)
 			if cond, exists := conditionsMap[idStr]; exists {
 				info.ConditionInfo = cond
+			}
+		}
+		if item.EquipmentType > 0 {
+			idStr := strconv.FormatInt(item.EquipmentType, 10)
+			if eqType, exists := equipmentTypesMap[idStr]; exists {
+				info.EquipmentTypeInfo = eqType
 			}
 		}
 		offersList = append(offersList, info)
