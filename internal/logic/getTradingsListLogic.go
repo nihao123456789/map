@@ -585,8 +585,8 @@ func toDepotInfo(item *depots.Depots) *types.DepotInfo {
 		// LocalAddress: item.LocalAddress.String,
 		// AddressLine1: item.AddressLine1.String,
 		// AddressLine2: item.AddressLine2.String,
-		// Lat:          float32(item.Lat.Float64),
-		// Lng:          float32(item.Lng.Float64),
+		Lat:          float32(item.Lat.Float64),
+		Lng:          float32(item.Lng.Float64),
 	}
 }
 

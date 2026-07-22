@@ -35,8 +35,8 @@ type DepotInfo struct {
 	// LocalAddress string  `json:"local_address"`
 	// AddressLine1 string  `json:"address_line1"`
 	// AddressLine2 string  `json:"address_line2"`
-	// Lat          float32 `json:"lat"`
-	// Lng          float32 `json:"lng"`
+	Lat          float32 `json:"lat"`
+	Lng          float32 `json:"lng"`
 }
 
 type LocationInfo struct {
