@@ -3,6 +3,8 @@
 
 package types
 
+import "encoding/json"
+
 type CompanyInfo struct {
 	Id               int64             `json:"id"`
 	Name             string            `json:"name"` // 企业官方名称
@@ -210,5 +212,10 @@ type EnumsBatchReq struct {
 
 type EnumsBatchResp struct {
 	Enums map[string][]EnumItem `json:"enums"` // 按 category 分组的字典映射
+}
+
+// MarshalJSON 使得 EnumsBatchResp 在进行 JSON 序列化时直接展开 Enums 内容，拍平接口数据。
+func (r EnumsBatchResp) MarshalJSON() ([]byte, error) {
+	return json.Marshal(r.Enums)
 }
 
