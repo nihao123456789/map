@@ -73,29 +73,6 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		dbCategory = 0
 	}
 
-	// 解析 condition 箱况：通过 EnumsModel 从 enums 数据表中根据 category = enums.CategoryConditions 和 value 动态获取 item_id 的值
-	var itemIDStr string = "0"
-	enumItem, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(l.ctx, enums.CategoryConditions, req.Condition)
-	if err != nil {
-		if err != enums.ErrNotFound {
-			l.Errorf("从 enums 数据表获取箱况失败: value=%s, err=%v", req.Condition, err)
-			return nil, err
-		}
-	} else {
-		itemIDStr = enumItem.ItemId
-	}
-
-	dbCondition, err := strconv.ParseInt(itemIDStr, 10, 64)
-	if err != nil {
-		dbCondition = 0
-	}
-
-	// 解析 color 颜色：RAL 编码格式，映射为对应 ID 数值
-	var dbColor int64
-	if val, exists := offers.ColorMap[req.Color]; exists {
-		dbColor = val
-	}
-
 	// 解析 equipmentType 箱型规格：通过 EnumsModel 从 enums 数据表中根据 category = enums.CategoryEquipmentTypes 和 value 动态获取 item_id 的值
 	var equipItemIDStr string = "0"
 	if len(req.EquipmentType) > 0 {
@@ -115,6 +92,23 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		dbEquipmentType = 0
 	}
 
+	// 解析 condition 箱况：通过 EnumsModel 从 enums 数据表中根据 category = enums.CategoryConditions 和 value 动态获取 item_id 的值
+	var itemIDStr string = "0"
+	enumItem, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(l.ctx, enums.CategoryConditions, req.Condition)
+	if err != nil {
+		if err != enums.ErrNotFound {
+			l.Errorf("从 enums 数据表获取箱况失败: value=%s, err=%v", req.Condition, err)
+			return nil, err
+		}
+	} else {
+		itemIDStr = enumItem.ItemId
+	}
+
+	dbCondition, err := strconv.ParseInt(itemIDStr, 10, 64)
+	if err != nil {
+		dbCondition = 0
+	}
+
 	// 解析 commercialTerm 提箱方式：gate_buy -> 10, pick_up -> 20, 其他 -> 0
 	var dbCommercialTerm int64
 	switch req.CommercialTerm {
@@ -125,6 +119,15 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 	default:
 		dbCommercialTerm = 0
 	}
+
+	// 解析 color 颜色：RAL 编码格式，映射为对应 ID 数值
+	var dbColor int64
+	if val, exists := offers.ColorMap[req.Color]; exists {
+		dbColor = val
+	}
+
+
+
 
 	// 游标分页限制机制，防范海量数据查询导致内存溢出 (OOM) 与 GC 压力
 	limit := req.PageSize
