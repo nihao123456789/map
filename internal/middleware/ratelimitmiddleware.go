@@ -21,7 +21,7 @@ func RateLimitMiddleware(limiter *rate.Limiter, next http.HandlerFunc) http.Hand
 				Code int64  `json:"code"`
 				Msg  string `json:"msg"`
 			}{
-				Code: 429,
+				Code: int64(http.StatusTooManyRequests),
 				Msg:  "请求过于频繁，请稍后再试",
 			}
 			
