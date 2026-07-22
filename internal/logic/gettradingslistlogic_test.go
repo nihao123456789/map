@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -28,7 +29,7 @@ import (
 func TestGetTradingsList_LocationInfo(t *testing.T) {
 	var c config.Config
 	// 加载本地开发配置文件
-	conf.MustLoad("d:/project/map/etc/mapserver-dev.yaml", &c)
+	conf.MustLoad("../../etc/mapserver-dev.yaml", &c)
 
 	// 初始化服务上下文
 	svcCtx := svc.NewServiceContext(c)
@@ -77,9 +78,16 @@ func TestRunServer(t *testing.T) {
 
 	// 从配置文件加载服务配置
 	var c config.Config
-	conf.MustLoad("d:/project/map/etc/mapserver-dev.yaml", &c)
+	conf.MustLoad("../../etc/mapserver-dev.yaml", &c)
 
-	// 显式初始化日志配置，在 go test 调试时强制将日志落盘至日志文件
+	// 1. 动态获取项目根目录并转换为绝对路径，避免 go test 自动切换工作目录到 internal/logic 导致日志生成在子目录下
+	if !filepath.IsAbs(c.Log.Path) {
+		if rootDir, err := filepath.Abs("../../"); err == nil {
+			c.Log.Path = filepath.Join(rootDir, c.Log.Path)
+		}
+	}
+	// 2. 将日志模式设为 volume，实现同时输出到控制台和日志文件
+	c.Log.Mode = "volume"
 	logx.MustSetup(c.Log)
 
 	// 初始化 go-zero HTTP 服务器
@@ -107,7 +115,7 @@ func TestRunServer(t *testing.T) {
 // TestGetTradingsList_Signature 验证 API 安全签名验证中间件（正常通过、缺失参数被拦截、签名不匹配被拦截及防重放拦截）。
 func TestGetTradingsList_Signature(t *testing.T) {
 	var c config.Config
-	conf.MustLoad("d:/project/map/etc/mapserver-dev.yaml", &c)
+	conf.MustLoad("../../etc/mapserver-dev.yaml", &c)
 
 	// 使用开发环境配置的秘钥实例化签名验证中间件
 	signMiddleware := middleware.NewSignatureMiddleware(c.SignatureSecret)
