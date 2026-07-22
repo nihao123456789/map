@@ -83,13 +83,13 @@ type OfferInfo struct {
 	// ValidDays                      int32         `json:"valid_days"`
 	EquipmentType                  int32         `json:"equipment_type"`
 	CommercialTerm                 int32         `json:"commercial_term"`
-	Comments                       string        `json:"comments"`
-	ReviewsCount                   int32         `json:"reviews_count"`
-	Prefixes                       string        `json:"prefixes"`
-	YearOfManufacture              int32         `json:"year_of_manufacture"`
-	ManufacturerId                 int32         `json:"manufacturer_id"`
-	DamageProtectionPlan           float32       `json:"damage_protection_plan"`
-	NegotiationsCount              int32         `json:"negotiations_count"`
+	// Comments                       string        `json:"comments"`
+	// ReviewsCount                   int32         `json:"reviews_count"`
+	// Prefixes                       string        `json:"prefixes"`
+	// YearOfManufacture              int32         `json:"year_of_manufacture"`
+	// ManufacturerId                 int32         `json:"manufacturer_id"`
+	// DamageProtectionPlan           float32       `json:"damage_protection_plan"`
+	// NegotiationsCount              int32         `json:"negotiations_count"`
 	Category                       int32         `json:"category"`
 	ExpiresAt                      string        `json:"expires_at"`
 	ReviewId                       int32         `json:"review_id"`
