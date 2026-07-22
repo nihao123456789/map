@@ -64,8 +64,8 @@ type OfferInfo struct {
 	Id                             int64         `json:"id"`
 	Condition                      int32         `json:"condition"`
 	Type                           string        `json:"type"`
-	PickupLocationId               int32         `json:"pickup_location_id"`
-	DropoffLocationId              int32         `json:"dropoff_location_id"`
+	// PickupLocationId               int32         `json:"pickup_location_id"`
+	// DropoffLocationId              int32         `json:"dropoff_location_id"`
 	Quantity                       int32         `json:"quantity"` // 集装箱数量
 	PickupCharge                   float32       `json:"pickup_charge"`
 	FreeDays                       int32         `json:"free_days"`
@@ -143,8 +143,8 @@ type OfferInfo struct {
 	ConsignorId                    int32         `json:"consignor_id"`
 	ConsignorName                  string        `json:"consignor_name"`
 	Label                          string        `json:"label"`
-	DropoffLocationIds             string        `json:"dropoff_location_ids"`
-	PickupLocationIds              string        `json:"pickup_location_ids"`
+	// DropoffLocationIds             string        `json:"dropoff_location_ids"`
+	// PickupLocationIds              string        `json:"pickup_location_ids"`
 	OriginalPrice                  float32       `json:"original_price"`
 	IsSpecialOffer                 bool          `json:"is_special_offer"`
 	SourceProposalId               int32         `json:"source_proposal_id"`
