@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/zeromicro/go-zero/core/conf"
+	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/rest"
 	"github.com/zeromicro/go-zero/rest/httpx"
 
@@ -77,6 +78,9 @@ func TestRunServer(t *testing.T) {
 	// 从配置文件加载服务配置
 	var c config.Config
 	conf.MustLoad("d:/project/map/etc/mapserver-dev.yaml", &c)
+
+	// 显式初始化日志配置，在 go test 调试时强制将日志落盘至日志文件
+	logx.MustSetup(c.Log)
 
 	// 初始化 go-zero HTTP 服务器
 	server := rest.MustNewServer(c.RestConf)
