@@ -86,7 +86,8 @@ func TestRunServer(t *testing.T) {
 			c.Log.Path = filepath.Join(rootDir, c.Log.Path)
 		}
 	}
-	// 2. 将日志模式设为 volume，实现同时输出到控制台和日志文件
+	// 2. 注入服务名称以防 panic，将日志模式设为 volume，实现同时输出到控制台和日志文件
+	c.Log.ServiceName = c.Name
 	c.Log.Mode = "volume"
 	logx.MustSetup(c.Log)
 
