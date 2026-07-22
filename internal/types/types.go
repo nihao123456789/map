@@ -159,6 +159,7 @@ type OfferInfo struct {
 	LocationInfo                   *LocationInfo `json:"location_info,optional"` // 地理位置树节点信息详情
 	ConditionInfo                  *EnumInfo     `json:"condition_info,optional"`      // 箱况详细信息详情
 	EquipmentTypeInfo              *EnumInfo     `json:"equipment_type_info,optional"` // 箱型详细信息详情
+	CommercialTermInfo             *EnumInfo     `json:"commercial_term_info,optional"` // 贸易条款（提箱方式）详细信息详情
 }
 
 type TradingListReq struct {
