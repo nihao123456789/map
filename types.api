@@ -161,7 +161,7 @@ type (
 		// Email            string            `json:"email"`
 		// Usci             string            `json:"usci"`
 		Status           int64             `json:"status"`
-		ReviewLevel      float32           `json:"review_level"`
+		ReviewLevel      float32           `json:"review_level"` // 星级
 		// ReviewsCount     int64             `json:"reviews_count"`
 		// IsOfficial       bool              `json:"is_official"`
 		// Address          string            `json:"address"`
