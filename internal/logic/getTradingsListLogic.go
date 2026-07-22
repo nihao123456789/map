@@ -109,14 +109,22 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		dbCondition = 0
 	}
 
-	// 解析 commercialTerm 提箱方式：gate_buy -> 10, pick_up -> 20, 其他 -> 0
-	var dbCommercialTerm int64
-	switch req.CommercialTerm {
-	case "gate_buy":
-		dbCommercialTerm = 10
-	case "pick_up":
-		dbCommercialTerm = 20
-	default:
+	// 解析 commercialTerm 提箱方式：通过 EnumsModel 从 enums 数据表中根据 category = enums.CategoryCommercialTerm 和 value 动态获取 item_id 的值
+	var termItemIDStr string = "0"
+	if len(req.CommercialTerm) > 0 {
+		enumTerm, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(l.ctx, enums.CategoryCommercialTerm, req.CommercialTerm)
+		if err != nil {
+			if err != enums.ErrNotFound {
+				l.Errorf("从 enums 数据表获取提箱方式失败: value=%s, err=%v", req.CommercialTerm, err)
+				return nil, err
+			}
+		} else {
+			termItemIDStr = enumTerm.ItemId
+		}
+	}
+
+	dbCommercialTerm, err := strconv.ParseInt(termItemIDStr, 10, 64)
+	if err != nil {
 		dbCommercialTerm = 0
 	}
 
