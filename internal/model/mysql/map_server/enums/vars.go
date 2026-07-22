@@ -12,4 +12,7 @@ const (
 
 	// CategoryContainerCategory 代表箱型分类的枚举分类
 	CategoryContainerCategory = "containerCategory"
+
+	// CategoryEquipmentTypes 代表箱型规格的枚举分类
+	CategoryEquipmentTypes = "equipmentTypes"
 )

@@ -96,10 +96,23 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		dbColor = val
 	}
 
-	// 解析 equipmentType 箱型规格：根据 enums.json 标准数据字典映射为对应 ID 数值
-	var dbEquipmentType int64
-	if val, exists := offers.EquipmentTypeMap[req.EquipmentType]; exists {
-		dbEquipmentType = val
+	// 解析 equipmentType 箱型规格：通过 EnumsModel 从 enums 数据表中根据 category = enums.CategoryEquipmentTypes 和 value 动态获取 item_id 的值
+	var equipItemIDStr string = "0"
+	if len(req.EquipmentType) > 0 {
+		enumEquip, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(l.ctx, enums.CategoryEquipmentTypes, req.EquipmentType)
+		if err != nil {
+			if err != enums.ErrNotFound {
+				l.Errorf("从 enums 数据表获取箱型规格失败: value=%s, err=%v", req.EquipmentType, err)
+				return nil, err
+			}
+		} else {
+			equipItemIDStr = enumEquip.ItemId
+		}
+	}
+
+	dbEquipmentType, err := strconv.ParseInt(equipItemIDStr, 10, 64)
+	if err != nil {
+		dbEquipmentType = 0
 	}
 
 	// 解析 commercialTerm 提箱方式：gate_buy -> 10, pick_up -> 20, 其他 -> 0
