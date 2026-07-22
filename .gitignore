@@ -14,3 +14,5 @@ run.ps1
 .gocache/
 tables.txt
 scripts/
+dump_tables.ps1
+internal/logic/local_run_server.exe

@@ -498,7 +498,7 @@ func toOfferInfo(item *offers.Offers) types.OfferInfo {
 		// DealCount:                      int32(item.DealCount),
 		// CscExpiresOn:                   formatTime(item.CscExpiresOn),
 		// EstimatedEmptyDeliveryDateTo:   formatTime(item.EstimatedEmptyDeliveryDateTo),
-		InstantSale:                    item.InstantSale != 0,
+		// InstantSale:                    item.InstantSale != 0,
 		// ConsignorId:                    int32(item.ConsignorId.Int64),
 		// ConsignorName:                  item.ConsignorName.String,
 		// Label:                          item.Label.String,
@@ -600,11 +600,11 @@ func toLocationInfo(item *treenodes.TreeNodes) *types.LocationInfo {
 		Name:        item.Name.String,
 		Type:        item.Type.String,
 		EnglishName: item.EnglishName.String,
-		Lat:         float32(item.Lat.Float64),
-		Lng:         float32(item.Lng.Float64),
-		Level:       int32(item.Level),
-		FullName:    item.FullName.String,
-		FullNameCn:  item.FullNameCn.String,
+		// Lat:         float32(item.Lat.Float64),
+		// Lng:         float32(item.Lng.Float64),
+		// Level:       int32(item.Level),
+		// FullName:    item.FullName.String,
+		// FullNameCn:  item.FullNameCn.String,
 	}
 }
 

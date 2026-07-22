@@ -44,11 +44,11 @@ type LocationInfo struct {
 	Name        string  `json:"name"` // 区域英文缩写名
 	Type        string  `json:"type"`
 	EnglishName string  `json:"english_name"`
-	Lat         float32 `json:"lat"`
-	Lng         float32 `json:"lng"`
-	Level       int32   `json:"level"`
-	FullName    string  `json:"full_name"`
-	FullNameCn  string  `json:"full_name_cn"`
+	// Lat         float32 `json:"lat"`
+	// Lng         float32 `json:"lng"`
+	// Level       int32   `json:"level"`
+	// FullName    string  `json:"full_name"`
+	// FullNameCn  string  `json:"full_name_cn"`
 }
 
 type MembershipBadge struct {
@@ -139,7 +139,7 @@ type OfferInfo struct {
 	// DealCount                      int32         `json:"deal_count"`
 	// CscExpiresOn                   string        `json:"csc_expires_on"`
 	// EstimatedEmptyDeliveryDateTo   string        `json:"estimated_empty_delivery_date_to"`
-	InstantSale                    bool          `json:"instant_sale"`
+	// InstantSale                    bool          `json:"instant_sale"`
 	// ConsignorId                    int32         `json:"consignor_id"`
 	// ConsignorName                  string        `json:"consignor_name"`
 	// Label                          string        `json:"label"`
