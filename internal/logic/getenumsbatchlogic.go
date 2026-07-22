@@ -46,15 +46,15 @@ func (l *GetEnumsBatchLogic) GetEnumsBatch(req *types.EnumsBatchReq) (resp *type
 
 	for _, item := range enumsData {
 		enumsMap[item.Category] = append(enumsMap[item.Category], types.EnumItem{
-			Id:            item.Id,
+			// Id:            item.Id,
 			Category:      item.Category,
 			CategoryName:  item.CategoryName,
 			ItemId:        item.ItemId,
 			Value:         item.Value,
 			Name:          item.Name,
 			NameZh:        item.NameZh,
-			Description:   item.Description,
-			DescriptionZh: item.DescriptionZh,
+			// Description:   item.Description,
+			// DescriptionZh: item.DescriptionZh,
 			Extra:         item.Extra,
 		})
 	}

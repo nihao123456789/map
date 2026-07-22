@@ -194,15 +194,15 @@ type ConditionInfo struct {
 }
 
 type EnumItem struct {
-	Id            int64  `json:"id"`
+	// Id            int64  `json:"id"`
 	Category      string `json:"category"`
 	CategoryName  string `json:"category_name"`
 	ItemId        string `json:"item_id"`
 	Value         string `json:"value"`
 	Name          string `json:"name"`
 	NameZh        string `json:"name_zh"`
-	Description   string `json:"description"`
-	DescriptionZh string `json:"description_zh"`
+	// Description   string `json:"description"`
+	// DescriptionZh string `json:"description_zh"`
 	Extra         string `json:"extra"`
 }
 
