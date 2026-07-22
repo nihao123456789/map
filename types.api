@@ -48,18 +48,18 @@ type (
 		// DamageProtectionPlan           float32 `json:"damage_protection_plan"`
 		// NegotiationsCount              int32   `json:"negotiations_count"`
 		Category                       int32   `json:"category"` // 类别
-		ExpiresAt                      string  `json:"expires_at"`
-		ReviewId                       int32   `json:"review_id"`
-		Detail                         string  `json:"detail"`
+		// ExpiresAt                      string  `json:"expires_at"`
+		// ReviewId                       int32   `json:"review_id"`
+		// Detail                         string  `json:"detail"`
 		Status                         int32   `json:"status"`
-		DeletedAt                      string  `json:"deleted_at"`
-		ExpiresIn                      int32   `json:"expires_in"`
-		ReadyForPickupOn               string  `json:"ready_for_pickup_on"`
-		ReadyForPickupFrom             string  `json:"ready_for_pickup_from"`
-		ReadyForPickupTo               string  `json:"ready_for_pickup_to"`
-		WithLockBox                    bool    `json:"with_lock_box"`
-		WithForkliftPockets            bool    `json:"with_forklift_pockets"`
-		SellFor                        int32   `json:"sell_for"`
+		// DeletedAt                      string  `json:"deleted_at"`
+		// ExpiresIn                      int32   `json:"expires_in"`
+		// ReadyForPickupOn               string  `json:"ready_for_pickup_on"`
+		// ReadyForPickupFrom             string  `json:"ready_for_pickup_from"`
+		// ReadyForPickupTo               string  `json:"ready_for_pickup_to"`
+		// WithLockBox                    bool    `json:"with_lock_box"`
+		// WithForkliftPockets            bool    `json:"with_forklift_pockets"`
+		// SellFor                        int32   `json:"sell_for"`
 		LocationId                     int32   `json:"location_id"`
 		Name                           string  `json:"name"`
 		ImagesCount                    int32   `json:"images_count"`
