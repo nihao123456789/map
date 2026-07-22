@@ -432,7 +432,7 @@ func toOfferInfo(item *offers.Offers) types.OfferInfo {
 		YearOfManufactureRangeFrom:     int32(item.YearOfManufactureRangeFrom.Int64),
 		YearOfManufactureRangeTo:       int32(item.YearOfManufactureRangeTo.Int64),
 		CscTestCertificate:             item.CscTestCertificate != 0,
-		EquipmentTypeId:                int32(item.EquipmentTypeId.Int64),
+		// EquipmentTypeId:                int32(item.EquipmentTypeId.Int64),
 		InsuranceType:                  int32(item.InsuranceType.Int64),
 		InsuranceDays:                  int32(item.InsuranceDays),
 		Extra:                          item.Extra.String,
