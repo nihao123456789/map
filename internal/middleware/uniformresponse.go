@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/zeromicro/go-zero/core/logx"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // bodyWriter 用于拦截并缓存底层的 Response 输出流字节数据
@@ -25,6 +26,13 @@ func (w *bodyWriter) Write(b []byte) (int, error) {
 // UniformResponseMiddleware 全局统一成功响应格式包装中间件
 func UniformResponseMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// 0. 读取 Trace ID (从 OpenTelemetry Span 提取)
+		var traceID string
+		spanCtx := trace.SpanContextFromContext(r.Context())
+		if spanCtx.HasTraceID() {
+			traceID = spanCtx.TraceID().String()
+		}
+
 		// 1. 读取并记录入参日志 (r.Body)
 		var reqBody []byte
 		if r.Body != nil {
@@ -59,26 +67,33 @@ func UniformResponseMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		// 判断是否是已经格式化好的错误输出结构（参数校验错误或自定义业务错误）
 		var temp map[string]interface{}
 		if err := json.Unmarshal(originalBody, &temp); err == nil {
-			// 如果顶级 JSON 结构中包含 "code" 键，且不包含 "data" 键，表明这必然是错误回包，直接原样透传
+			// 如果顶级 JSON 结构中包含 "code" 键，且不包含 "data" 键，表明这必然是错误回包，直接原样透传并带上 trace
 			if _, hasCode := temp["code"]; hasCode {
 				if _, hasData := temp["data"]; !hasData {
-					finalResponse = originalBody
+					temp["trace"] = traceID
+					if eb, err := json.Marshal(temp); err == nil {
+						finalResponse = eb
+					} else {
+						finalResponse = originalBody
+					}
 					isError = true
 				}
 			}
 		}
 
 		if !isError {
-			// 如果是没有包含 code 字段的正常成功数据，则动态将其包裹为统一的规范格式
+			// 如果是没有包含 code 字段的正常成功数据，则动态将其包裹为统一的规范格式（trace 注入在 data 之前，防范日志截断）
 			var rawData json.RawMessage = originalBody
 			wrapped := struct {
-				Code int64           `json:"code"`
-				Msg  string          `json:"msg"`
-				Data json.RawMessage `json:"data"`
+				Code  int64           `json:"code"`
+				Msg   string          `json:"msg"`
+				Trace string          `json:"trace"`
+				Data  json.RawMessage `json:"data"`
 			}{
-				Code: 200,
-				Msg:  "",
-				Data: rawData,
+				Code:  200,
+				Msg:   "",
+				Trace: traceID,
+				Data:  rawData,
 			}
 
 			var err error
