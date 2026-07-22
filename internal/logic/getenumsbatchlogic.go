@@ -27,7 +27,6 @@ func NewGetEnumsBatchLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Get
 
 // GetEnumsBatch 实现批量拉取字典项的业务逻辑，以 category 进行分组返回。
 func (l *GetEnumsBatchLogic) GetEnumsBatch(req *types.EnumsBatchReq) (resp *types.EnumsBatchResp, err error) {
-	l.Infof("批量获取字典数据请求: categories=%v", req.Categories)
 
 	// 批量拉取数据，规避多次循环查库的 N+1 慢查询问题
 	enumsData, err := l.svcCtx.EnumsModel.FindByCategories(l.ctx, req.Categories)
@@ -58,6 +57,7 @@ func (l *GetEnumsBatchLogic) GetEnumsBatch(req *types.EnumsBatchReq) (resp *type
 			Extra:         item.Extra,
 		})
 	}
+
 
 	return &types.EnumsBatchResp{
 		Enums: enumsMap,
