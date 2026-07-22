@@ -137,34 +137,34 @@ type (
 	DepotInfo {
 		Id           int64   `json:"id"`
 		Name         string  `json:"name"` // 堆场英文/通用名称
-		PostalCode   string  `json:"postal_code"`
-		Website      string  `json:"website"`
-		PhoneNumber  string  `json:"phone_number"`
-		City         string  `json:"city"`
-		Country      string  `json:"country"`
-		ContactName  string  `json:"contact_name"`
-		Email        string  `json:"email"`
+		// PostalCode   string  `json:"postal_code"`
+		// Website      string  `json:"website"`
+		// PhoneNumber  string  `json:"phone_number"`
+		// City         string  `json:"city"`
+		// Country      string  `json:"country"`
+		// ContactName  string  `json:"contact_name"`
+		// Email        string  `json:"email"`
 		LocationId   int64   `json:"location_id"`
-		LocalName    string  `json:"local_name"`
-		LocalAddress string  `json:"local_address"`
-		AddressLine1 string  `json:"address_line1"`
-		AddressLine2 string  `json:"address_line2"`
-		Lat          float32 `json:"lat"`
-		Lng          float32 `json:"lng"`
+		// LocalName    string  `json:"local_name"`
+		// LocalAddress string  `json:"local_address"`
+		// AddressLine1 string  `json:"address_line1"`
+		// AddressLine2 string  `json:"address_line2"`
+		// Lat          float32 `json:"lat"`
+		// Lng          float32 `json:"lng"`
 	}
 
 	CompanyInfo {
 		Id               int64             `json:"id"`
 		Name             string            `json:"name"` // 企业官方名称
 		LocationId       int64             `json:"location_id"`
-		Telephone        string            `json:"telephone"`
-		Email            string            `json:"email"`
-		Usci             string            `json:"usci"`
+		// Telephone        string            `json:"telephone"`
+		// Email            string            `json:"email"`
+		// Usci             string            `json:"usci"`
 		Status           int64             `json:"status"`
 		ReviewLevel      float32           `json:"review_level"`
-		ReviewsCount     int64             `json:"reviews_count"`
-		IsOfficial       bool              `json:"is_official"`
-		Address          string            `json:"address"`
+		// ReviewsCount     int64             `json:"reviews_count"`
+		// IsOfficial       bool              `json:"is_official"`
+		// Address          string            `json:"address"`
 		MembershipBadges []MembershipBadge `json:"membership_badges"` // 企业拥有的且仍在有效激活期的会员徽章列表
 	}
 
@@ -174,8 +174,8 @@ type (
 		Slug        string `json:"slug"`        // 会员唯一标志名，例如 trading_founding
 		Name        string `json:"name"`        // 会员中文名称
 		NameEn      string `json:"name_en"`      // 会员英文名称
-		DisplayName string `json:"display_name"` // 徽章展示名称
-		ExpiresAt   string `json:"expires_at"`   // 过期时间，RFC3339 格式
+		// DisplayName string `json:"display_name"` // 徽章展示名称
+		// ExpiresAt   string `json:"expires_at"`   // 过期时间，RFC3339 格式
 	}
 
 	// EnumInfo 系统字典详细信息
