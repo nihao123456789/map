@@ -73,7 +73,7 @@ type (
 		CreatedAt                      string  `json:"created_at"`
 		UpdatedAt                      string  `json:"updated_at"`
 		Price                          float32 `json:"price"` // 单价
-		Color                          int32   `json:"color"`
+		// Color                          int32   `json:"color"`
 		// EstimatedEmptyDeliveryDateFrom string  `json:"estimated_empty_delivery_date_from"`
 		// OfferType                      int32   `json:"offer_type"`
 		// Source                         int32   `json:"source"`
@@ -87,30 +87,30 @@ type (
 		// InsuranceDays                  int32   `json:"insurance_days"`
 		// Extra                          string  `json:"extra"`
 		Colors                         string  `json:"colors"` // 支持的备选颜色
-		PinnedAt                       string  `json:"pinned_at"`
+		// PinnedAt                       string  `json:"pinned_at"`
 		BumpedAt                       string  `json:"bumped_at"`
-		StorageFreeDays                int32   `json:"storage_free_days"`
+		// StorageFreeDays                int32   `json:"storage_free_days"`
 		// ConditionTagIds                string  `json:"condition_tag_ids"`
 		// ConditionLogo                  int32   `json:"condition_logo"`
-		NumberOfVents                  int32   `json:"number_of_vents"`
-		DealCount                      int32   `json:"deal_count"`
-		CscExpiresOn                   string  `json:"csc_expires_on"`
-		EstimatedEmptyDeliveryDateTo   string  `json:"estimated_empty_delivery_date_to"`
+		// NumberOfVents                  int32   `json:"number_of_vents"`
+		// DealCount                      int32   `json:"deal_count"`
+		// CscExpiresOn                   string  `json:"csc_expires_on"`
+		// EstimatedEmptyDeliveryDateTo   string  `json:"estimated_empty_delivery_date_to"`
 		InstantSale                    bool    `json:"instant_sale"`
-		ConsignorId                    int32   `json:"consignor_id"`
-		ConsignorName                  string  `json:"consignor_name"`
-		Label                          string  `json:"label"`
+		// ConsignorId                    int32   `json:"consignor_id"`
+		// ConsignorName                  string  `json:"consignor_name"`
+		// Label                          string  `json:"label"`
 		// DropoffLocationIds             string  `json:"dropoff_location_ids"`
 		// PickupLocationIds              string  `json:"pickup_location_ids"`
-		OriginalPrice                  float32 `json:"original_price"`
-		IsSpecialOffer                 bool    `json:"is_special_offer"`
+		// OriginalPrice                  float32 `json:"original_price"`
+		// IsSpecialOffer                 bool    `json:"is_special_offer"`
 		// SourceProposalId               int32   `json:"source_proposal_id"`
-		IsExpired                      bool    `json:"is_expired"`
+		// IsExpired                      bool    `json:"is_expired"`
 		// DataSource                     int32   `json:"data_source"`
-		Meta                           string  `json:"meta"`
+		// Meta                           string  `json:"meta"`
 		IsNonNegotiable                bool         `json:"is_non_negotiable"`
-		HasDamages                     bool         `json:"has_damages"`
-		WithEasyOpenDoor               bool         `json:"with_easy_open_door"`
+		// HasDamages                     bool         `json:"has_damages"`
+		// WithEasyOpenDoor               bool         `json:"with_easy_open_door"`
 		CompanyInfo                    *CompanyInfo  `json:"company_info,optional"` // 公司信息详情
 		DepotInfo                      *DepotInfo    `json:"depot_info,optional"`   // 堆场信息详情
 		LocationInfo                   *LocationInfo `json:"location_info,optional"` // 地理位置树节点信息详情
