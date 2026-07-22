@@ -9,4 +9,7 @@ var ErrNotFound = sqlx.ErrNotFound
 const (
 	// CategoryConditions 代表箱况的枚举分类
 	CategoryConditions = "conditions"
+
+	// CategoryContainerCategory 代表箱型分类的枚举分类
+	CategoryContainerCategory = "containerCategory"
 )

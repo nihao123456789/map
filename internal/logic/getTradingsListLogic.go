@@ -54,14 +54,22 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		return &types.TradingListResp{List: []types.OfferInfo{}}, nil
 	}
 
-	// 解析 category 箱型分类：dry -> 1, tank -> 2, 其他 -> 0 (不限)
-	var dbCategory int64
-	switch req.Category {
-	case "dry":
-		dbCategory = 1
-	case "tank":
-		dbCategory = 2
-	default:
+	// 解析 category 箱型分类：通过 EnumsModel 从 enums 数据表中根据 category = enums.CategoryContainerCategory 和 value 动态获取 item_id 的值
+	var categoryItemIDStr string = "0"
+	if len(req.Category) > 0 {
+		enumCat, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(l.ctx, enums.CategoryContainerCategory, req.Category)
+		if err != nil {
+			if err != enums.ErrNotFound {
+				l.Errorf("从 enums 数据表获取箱型分类失败: value=%s, err=%v", req.Category, err)
+				return nil, err
+			}
+		} else {
+			categoryItemIDStr = enumCat.ItemId
+		}
+	}
+
+	dbCategory, err := strconv.ParseInt(categoryItemIDStr, 10, 64)
+	if err != nil {
 		dbCategory = 0
 	}
 
