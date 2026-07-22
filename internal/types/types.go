@@ -157,8 +157,8 @@ type OfferInfo struct {
 	CompanyInfo                    *CompanyInfo  `json:"company_info,optional"`  // 公司信息详情
 	DepotInfo                      *DepotInfo    `json:"depot_info,optional"`    // 堆场信息详情
 	LocationInfo                   *LocationInfo `json:"location_info,optional"` // 地理位置树节点信息详情
-	ConditionInfo                  *ConditionInfo `json:"condition_info,optional"` // 箱况详细信息详情
-	EquipmentTypeInfo              *ConditionInfo `json:"equipment_type_info,optional"` // 箱型详细信息详情
+	ConditionInfo                  *EnumInfo     `json:"condition_info,optional"`      // 箱况详细信息详情
+	EquipmentTypeInfo              *EnumInfo     `json:"equipment_type_info,optional"` // 箱型详细信息详情
 }
 
 type TradingListReq struct {
@@ -181,7 +181,7 @@ type TradingListResp struct {
 	List     []OfferInfo `json:"list"`     // list列表
 }
 
-type ConditionInfo struct {
+type EnumInfo struct {
 	// Id            int64  `json:"id"`
 	Category      string `json:"category"`
 	CategoryName  string `json:"category_name"`

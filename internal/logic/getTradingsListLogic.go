@@ -284,7 +284,7 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 	}
 
 
-	var conditionsMap = make(map[string]*types.ConditionInfo)
+	var conditionsMap = make(map[string]*types.EnumInfo)
 	if len(conditionIdsMap) > 0 {
 		conditionIds := make([]string, 0, len(conditionIdsMap))
 		for id := range conditionIdsMap {
@@ -296,11 +296,11 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 			return nil, err
 		}
 		for _, val := range enumsData {
-			conditionsMap[val.ItemId] = toConditionInfo(val)
+			conditionsMap[val.ItemId] = toEnumInfo(val)
 		}
 	}
 
-	var equipmentTypesMap = make(map[string]*types.ConditionInfo)
+	var equipmentTypesMap = make(map[string]*types.EnumInfo)
 	if len(equipmentTypeIdsMap) > 0 {
 		equipmentTypeIds := make([]string, 0, len(equipmentTypeIdsMap))
 		for id := range equipmentTypeIdsMap {
@@ -312,7 +312,7 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 			return nil, err
 		}
 		for _, val := range enumsData {
-			equipmentTypesMap[val.ItemId] = toConditionInfo(val)
+			equipmentTypesMap[val.ItemId] = toEnumInfo(val)
 		}
 	}
 
@@ -556,12 +556,12 @@ func toLocationInfo(item *treenodes.TreeNodes) *types.LocationInfo {
 	}
 }
 
-// toConditionInfo 将 enums 数据库模型转换为 API 层的 ConditionInfo 实体
-func toConditionInfo(item *enums.Enums) *types.ConditionInfo {
+// toEnumInfo 将 enums 数据库模型转换为 API 层的 EnumInfo 实体
+func toEnumInfo(item *enums.Enums) *types.EnumInfo {
 	if item == nil {
 		return nil
 	}
-	return &types.ConditionInfo{
+	return &types.EnumInfo{
 		// Id:            item.Id,
 		Category:      item.Category,
 		CategoryName:  item.CategoryName,
