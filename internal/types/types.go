@@ -72,15 +72,15 @@ type OfferInfo struct {
 	// PerDiems                       float32       `json:"per_diems"`
 	// StorageFee                     float32       `json:"storage_fee"`
 	// Dpp                            float32       `json:"dpp"`
-	Premium                        float32       `json:"premium"`
-	NewBuildPrice                  float32       `json:"new_build_price"`
-	DepreciationPerYear            float32       `json:"depreciation_per_year"`
-	MinimumReplacementValue        float32       `json:"minimum_replacement_value"`
-	AdditionalInformation          string        `json:"additional_information"`
+	// Premium                        float32       `json:"premium"`
+	// NewBuildPrice                  float32       `json:"new_build_price"`
+	// DepreciationPerYear            float32       `json:"depreciation_per_year"`
+	// MinimumReplacementValue        float32       `json:"minimum_replacement_value"`
+	// AdditionalInformation          string        `json:"additional_information"`
 	UserId                         int32         `json:"user_id"`
 	CompanyId                      int32         `json:"company_id"`
 	Direction                      int32         `json:"direction"`
-	ValidDays                      int32         `json:"valid_days"`
+	// ValidDays                      int32         `json:"valid_days"`
 	EquipmentType                  int32         `json:"equipment_type"`
 	CommercialTerm                 int32         `json:"commercial_term"`
 	Comments                       string        `json:"comments"`
