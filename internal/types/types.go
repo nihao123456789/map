@@ -133,8 +133,8 @@ type OfferInfo struct {
 	PinnedAt                       string        `json:"pinned_at"`
 	BumpedAt                       string        `json:"bumped_at"`
 	StorageFreeDays                int32         `json:"storage_free_days"`
-	ConditionTagIds                string        `json:"condition_tag_ids"`
-	ConditionLogo                  int32         `json:"condition_logo"`
+	// ConditionTagIds                string        `json:"condition_tag_ids"`
+	// ConditionLogo                  int32         `json:"condition_logo"`
 	NumberOfVents                  int32         `json:"number_of_vents"`
 	DealCount                      int32         `json:"deal_count"`
 	CscExpiresOn                   string        `json:"csc_expires_on"`
