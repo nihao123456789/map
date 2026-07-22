@@ -1,8 +1,6 @@
 package enums
 
 import (
-	"context"
-
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
@@ -13,12 +11,7 @@ type (
 	EnumsModel interface {
 		enumsModel
 		withSession(session sqlx.Session) EnumsModel
-		// FindOneByCategoryAndValue 根据分类和值查找单条字典项记录
-		FindOneByCategoryAndValue(ctx context.Context, category, value string) (*Enums, error)
-		// FindByCategoryAndItemIds 根据分类和ID列表批量查找字典项记录
-		FindByCategoryAndItemIds(ctx context.Context, category string, itemIds []string) ([]*Enums, error)
-		// FindByCategories 根据分类列表批量查找所有相关的字典项记录
-		FindByCategories(ctx context.Context, categories []string) ([]*Enums, error)
+		EnumsModelCustom
 	}
 
 	customEnumsModel struct {
