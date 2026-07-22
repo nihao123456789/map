@@ -9,6 +9,8 @@ package svc
 import (
 	"fmt"
 
+	"golang.org/x/time/rate"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
@@ -79,6 +81,9 @@ type ServiceContext struct {
 
 	// SignatureMiddleware 签名校验路由中间件
 	SignatureMiddleware rest.Middleware
+
+	// RateLimiter 全局限流器
+	RateLimiter *rate.Limiter
 }
 
 // NewServiceContext 初始化并返回 ServiceContext。
@@ -143,6 +148,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		TreeNodesModel:           treenodesModel,
 		EnumsModel:               enumsModel,
 		SignatureMiddleware:      middleware.NewSignatureMiddleware(c.SignatureSecret).Handle,
+		RateLimiter:              rate.NewLimiter(rate.Limit(c.RateLimit.Limit), c.RateLimit.Burst),
 	}
 }
 

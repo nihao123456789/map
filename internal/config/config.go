@@ -27,6 +27,12 @@ type Config struct {
 
 	// SignatureSecret 是接口签名校验的盐值/密钥
 	SignatureSecret string
+
+	// RateLimit 限流配置 (单机令牌桶防爆流)
+	RateLimit struct {
+		Limit float64 `json:",default=100"` // 每秒允许的请求数 (QPS)
+		Burst int     `json:",default=20"`  // 允许的最大突发请求量 (Burst)
+	}
 }
 
 // MySQLConf 是 MySQL/MariaDB 数据库的连接配置。

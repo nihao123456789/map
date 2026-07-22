@@ -76,6 +76,11 @@ func main() {
 	// 注册全局成功返回包装中间件
 	server.Use(middleware.UniformResponseMiddleware)
 
+	// 注册全局防暴流限流中间件 (基于单机令牌桶保护)
+	server.Use(func(next http.HandlerFunc) http.HandlerFunc {
+		return middleware.RateLimitMiddleware(ctx.RateLimiter, next)
+	})
+
 	// 注册所有 HTTP 路由处理器
 	handler.RegisterHandlers(server, ctx)
 
