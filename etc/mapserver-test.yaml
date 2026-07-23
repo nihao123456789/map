@@ -7,13 +7,6 @@ SignatureSecret: "MapServerSecretKey2026"
 # MySQL 数据库配置（测试环境业务数据存储）
 MySQL:
   DataSource: "test_user:TestPassword@tcp(127.0.0.1:3306)/map_server_test?charset=utf8mb4&parseTime=true&loc=UTC&timeout=5s&readTimeout=10s&writeTimeout=10s"
-
-# Redis 配置（测试环境 Redis-GEO 空间缓存）
-Redis:
-  - Host: "127.0.0.1:6379"
-    Type: node
-    # Pass: "TestRedisPassword" # 测试环境 Redis 密码，若无密码请注释或留空
-
 # PostgreSQL+PostGIS 配置（测试环境精确空间查询）
 # 连接字符串格式：host=主机 port=端口 user=用户名 password=密码 dbname=数据库名 sslmode=disable
 PostgreSQL:

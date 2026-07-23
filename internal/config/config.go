@@ -6,7 +6,6 @@
 package config
 
 import (
-	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/rest"
 )
 
@@ -18,9 +17,6 @@ type Config struct {
 
 	// MySQL 数据库连接配置（业务数据存储，兼容并指向本地 MariaDB 数据库）
 	MySQL MySQLConf
-
-	// Redis 连接配置（Redis-GEO 空间缓存，使用 go-zero 内置缓存配置结构）
-	Redis cache.CacheConf
 
 	// PostgreSQL 连接配置（PostGIS 精确空间查询）
 	PostgreSQL PostgreSQLConf

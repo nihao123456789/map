@@ -12,7 +12,6 @@ import (
 	"golang.org/x/time/rate"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/redis/go-redis/v9"
 	"github.com/zeromicro/go-zero/core/collection"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 
@@ -38,13 +37,10 @@ type ServiceContext struct {
 	// Config 服务配置
 	Config config.Config
 
-	// ==================== MySQL + Redis-GEO 相关 ====================
+	// ==================== MySQL 业务存储相关 ====================
 
-	// DB 是 go-zero 封装的 MySQL/MariaDB 数据库连接
+	// DB 是 go-zero 封装 of MySQL/MariaDB 数据库连接
 	DB sqlx.SqlConn
-
-	// RedisClient 是原生的 go-redis 客户端，用于执行 GEO 等高级命令
-	RedisClient *redis.Client
 
 	// SyncFailureLogModel 提供 MySQL 同步失败日志表的数据访问
 	SyncFailureLogModel *mysqlModel.SyncFailureLogModel
@@ -111,12 +107,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	}
 	fmt.Println("MySQL/MariaDB 连接初始化完成")
 
-	// -----------------------------------------------------------
-	// 初始化 Redis 客户端（go-redis/v9）
-	// 注意：当前项目版本暂未使用 Redis 缓存与队列，因此跳过 Redis 初始化连接。
-	// -----------------------------------------------------------
-	var redisClient *redis.Client = nil
-	fmt.Println("跳过 Redis 连接初始化（当前项目未使用 Redis）")
 
 	// -----------------------------------------------------------
 	// 初始化 MySQL Model
@@ -151,7 +141,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	return &ServiceContext{
 		Config:                c,
 		DB:                    db,
-		RedisClient:           redisClient,
 		PgPool:                pgPool,
 		PostGISYardModel:      postGISYardModel,
 		PostGISContainerModel: postGISContainerModel,
@@ -176,10 +165,5 @@ func (sc *ServiceContext) Shutdown() {
 	if sc.PgPool != nil {
 		sc.PgPool.Close()
 		fmt.Println("PostgreSQL 连接池已安全关闭")
-	}
-	// 2. 关闭 Redis 客户端
-	if sc.RedisClient != nil {
-		_ = sc.RedisClient.Close()
-		fmt.Println("Redis 客户端连接已安全关闭")
 	}
 }
