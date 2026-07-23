@@ -207,5 +207,21 @@ type (
 	EnumsBatchResp {
 		Enums map[string][]EnumInfo `json:"enums"` // 按 category 分组的字典映射
 	}
+
+	// TradingLocationCountReq 按位置统计数量请求
+	TradingLocationCountReq {
+		Direction string `json:"direction"`
+	}
+
+	// TradingLocationCountItem 按位置统计数量子项
+	TradingLocationCountItem {
+		LocationId int64 `json:"location_id"`
+		Count      int64 `json:"count"`
+	}
+
+	// TradingLocationCountResp 按位置统计数量响应
+	TradingLocationCountResp {
+		List []TradingLocationCountItem `json:"list"`
+	}
 )
 

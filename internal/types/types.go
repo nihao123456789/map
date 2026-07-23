@@ -207,3 +207,16 @@ type EnumsBatchResp struct {
 func (r EnumsBatchResp) MarshalJSON() ([]byte, error) {
 	return json.Marshal(r.Enums)
 }
+
+type TradingLocationCountReq struct {
+	Direction string `json:"direction"`
+}
+
+type TradingLocationCountItem struct {
+	LocationId int64 `json:"location_id"`
+	Count      int64 `json:"count"`
+}
+
+type TradingLocationCountResp struct {
+	List []TradingLocationCountItem `json:"list"`
+}

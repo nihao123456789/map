@@ -58,6 +58,29 @@ func TestGetTradingsList_LocationInfo(t *testing.T) {
 	fmt.Printf("--- 测试成功，返回数据样例 ---\n%s\n", string(resBytes))
 }
 
+func TestGetTradingLocationCount(t *testing.T) {
+	var c config.Config
+	// 加载本地开发配置文件
+	conf.MustLoad("../../etc/mapserver-dev.yaml", &c)
+
+	// 初始化服务上下文
+	svcCtx := svc.NewServiceContext(c)
+
+	l := logic.NewGetTradingLocationCountLogic(context.Background(), svcCtx)
+
+	req := &types.TradingLocationCountReq{
+		Direction: "supply",
+	}
+
+	resp, err := l.GetTradingLocationCount(req)
+	if err != nil {
+		t.Fatalf("调用 GetTradingLocationCount 报错: %v", err)
+	}
+
+	resBytes, _ := json.MarshalIndent(resp, "", "  ")
+	fmt.Printf("--- 统计接口测试成功，返回数据样例 ---\n%s\n", string(resBytes))
+}
+
 // TestRunServer 用于在受 Device Guard 限制的机器上，以单元测试的名义直接以白名单方式启动 HTTP 地图服务。
 func TestRunServer(t *testing.T) {
 	// 注册全局错误处理器，将参数校验错误及 Logic 层错误统一输出为友好的 JSON 格式
@@ -426,6 +449,103 @@ func TestFixSwagger(t *testing.T) {
 
 	// 9. 删除 EnumItem 并全局替换引用为 EnumInfo
 	delete(definitions, "EnumItem")
+
+	// 10. 注入新的 /api/tradings/location/count 路径到 paths 中
+	paths, ok := swagger["paths"].(map[string]interface{})
+	if ok {
+		paths["/api/tradings/location/count"] = map[string]interface{}{
+			"post": map[string]interface{}{
+				"consumes":    "application/json",
+				"description": "根据交易方向，按位置 ID 分组统计有效的买卖交易挂单数量",
+				"operationId": "GetTradingLocationCount",
+				"parameters": []interface{}{
+					map[string]interface{}{
+						"description": "请求发起时的 Unix 时间戳（秒级）",
+						"in":          "header",
+						"name":        "X-Timestamp",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]interface{}{
+						"description": "请求随机字符串",
+						"in":          "header",
+						"name":        "X-Nonce",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]interface{}{
+						"description": "校验签名",
+						"in":          "header",
+						"name":        "X-Signature",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]interface{}{
+						"description": "按位置统计数量请求",
+						"in":          "body",
+						"name":        "body",
+						"required":    true,
+						"schema": map[string]interface{}{
+							"$ref": "#/definitions/TradingLocationCountReq",
+						},
+					},
+				},
+				"produces": []interface{}{"application/json"},
+				"responses": map[string]interface{}{
+					"200": map[string]interface{}{
+						"description": "统计成功",
+						"schema": map[string]interface{}{
+							"$ref": "#/definitions/TradingLocationCountResp",
+						},
+					},
+				},
+				"summary": "按位置统计交易挂单数量",
+			},
+		}
+	}
+
+	// 11. 注入 TradingLocationCountReq, TradingLocationCountItem 和 TradingLocationCountResp 到 definitions
+	definitions["TradingLocationCountReq"] = map[string]interface{}{
+		"properties": map[string]interface{}{
+			"direction": map[string]interface{}{
+				"description": "交易方向",
+				"type":        "string",
+			},
+		},
+		"required": []interface{}{"direction"},
+		"type":     "object",
+	}
+
+	definitions["TradingLocationCountItem"] = map[string]interface{}{
+		"properties": map[string]interface{}{
+			"count": map[string]interface{}{
+				"description": "数量",
+				"format":      "int64",
+				"type":        "integer",
+			},
+			"location_id": map[string]interface{}{
+				"description": "位置 ID",
+				"format":      "int64",
+				"type":        "integer",
+			},
+		},
+		"required": []interface{}{"location_id", "count"},
+		"type":     "object",
+	}
+
+	definitions["TradingLocationCountResp"] = map[string]interface{}{
+		"properties": map[string]interface{}{
+			"list": map[string]interface{}{
+				"description": "按位置统计数量子项列表",
+				"items": map[string]interface{}{
+					"$ref": "#/definitions/TradingLocationCountItem",
+				},
+				"type": "array",
+			},
+		},
+		"required": []interface{}{"list"},
+		"type":     "object",
+	}
 
 	updatedData, err := json.MarshalIndent(swagger, "", "    ")
 	if err != nil {

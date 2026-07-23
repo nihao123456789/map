@@ -111,3 +111,22 @@ func (m *customOffersModel) CountByLocationIdAndDirection(ctx context.Context, l
 	}
 	return total, nil
 }
+
+// FindCountGroupByLocationId 根据交易方向按位置ID分组统计有效的买卖交易挂单数量
+func (m *customOffersModel) FindCountGroupByLocationId(ctx context.Context, direction int64) ([]*LocationCountResult, error) {
+	// 基础条件拼接，固定过滤 Trading 挂单、对应方向、已发布 (status=10)、且未过期 (is_expired=0) 并过滤物理删除
+	query := fmt.Sprintf(
+		"select `location_id`, count(*) as `count` from %s where `type` = '%s' and `direction` = ? and `status` = %d and `is_expired` = %d and `deleted_at` is null group by `location_id`",
+		m.table,
+		OfferTypeTrading,
+		OfferStatusPublished,
+		OfferNotExpired,
+	)
+
+	var resp []*LocationCountResult
+	err := m.conn.QueryRowsCtx(ctx, &resp, query, direction)
+	if err != nil {
+		return nil, fmt.Errorf("OffersModel.FindCountGroupByLocationId 统计失败: %w", err)
+	}
+	return resp, nil
+}
