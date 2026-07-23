@@ -213,8 +213,9 @@ type TradingLocationCountReq struct {
 }
 
 type TradingLocationCountItem struct {
-	LocationId int64 `json:"location_id"`
-	Count      int64 `json:"count"`
+	LocationId   int64         `json:"location_id"`
+	Count        int64         `json:"count"`
+	LocationInfo *LocationInfo `json:"location_info,optional"`
 }
 
 type TradingLocationCountResp struct {

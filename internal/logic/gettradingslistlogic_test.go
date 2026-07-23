@@ -528,6 +528,10 @@ func TestFixSwagger(t *testing.T) {
 				"format":      "int64",
 				"type":        "integer",
 			},
+			"location_info": map[string]interface{}{
+				"$ref":        "#/definitions/LocationInfo",
+				"description": "地理位置树节点信息详情",
+			},
 		},
 		"required": []interface{}{"location_id", "count"},
 		"type":     "object",

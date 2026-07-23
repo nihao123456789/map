@@ -215,8 +215,9 @@ type (
 
 	// TradingLocationCountItem 按位置统计数量子项
 	TradingLocationCountItem {
-		LocationId int64 `json:"location_id"`
-		Count      int64 `json:"count"`
+		LocationId   int64         `json:"location_id"`
+		Count        int64         `json:"count"`
+		LocationInfo *LocationInfo `json:"location_info,optional"`
 	}
 
 	// TradingLocationCountResp 按位置统计数量响应
