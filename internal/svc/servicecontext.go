@@ -8,6 +8,7 @@ package svc
 
 import (
 	"fmt"
+	"time"
 
 	"golang.org/x/time/rate"
 
@@ -98,6 +99,12 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	// 注：此处兼容并使用本地的 MariaDB 数据库（协议与驱动完全相同）。
 	// -----------------------------------------------------------
 	db := sqlx.NewMysql(c.MySQL.DataSource)
+	// 并发架构优化：为底层连接池配置最大打开连接数与空闲数，提升连接的复用与生命周期管理
+	if rawDB, err := db.RawDB(); err == nil && rawDB != nil {
+		rawDB.SetMaxOpenConns(150)           // 最大连接数
+		rawDB.SetMaxIdleConns(50)            // 最大空闲数
+		rawDB.SetConnMaxLifetime(time.Hour)  // 连接最大生命周期，防止长连接失效
+	}
 	fmt.Println("MySQL/MariaDB 连接初始化完成")
 
 	// -----------------------------------------------------------
