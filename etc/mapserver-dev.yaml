@@ -6,7 +6,7 @@ SignatureSecret: "MapServerSecretKey2026"
 
 # MySQL 数据库配置（业务数据存储）
 MySQL:
-  DataSource: "root:123456@tcp(127.0.0.1:3306)/map_server?charset=utf8mb4&parseTime=true&loc=Local&timeout=5s&readTimeout=10s&writeTimeout=10s"
+  DataSource: "root:123456@tcp(127.0.0.1:3306)/map_server?charset=utf8mb4&parseTime=true&loc=UTC&timeout=5s&readTimeout=10s&writeTimeout=10s"
 
 # Redis 配置（Redis-GEO 空间缓存）
 Redis:

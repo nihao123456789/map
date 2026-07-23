@@ -21,7 +21,7 @@ func (m *customMembershipPurchasesModel) FindActiveByCompanyIds(ctx context.Cont
 	}
 
 	query := fmt.Sprintf(
-		"select %s from %s where `company_id` in (%s) and `status` = 'active' and `expires_at` > NOW() and `deleted_at` is null",
+		"select %s from %s where `company_id` in (%s) and `status` = 'active' and `expires_at` > UTC_TIMESTAMP() and `deleted_at` is null",
 		membershipPurchasesRowsCustom, m.table, strings.Join(placeholders, ","),
 	)
 

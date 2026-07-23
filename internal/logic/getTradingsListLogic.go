@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"strconv"
+	"time"
 
 	"map-server/internal/svc"
 	"map-server/internal/types"
@@ -654,8 +655,8 @@ func toOfferInfo(item *offers.Offers) types.OfferInfo {
 		// ExpectedDeliveryTo:             formatTime(item.ExpectedDeliveryTo),
 		DepotId:                        int32(item.DepotId.Int64),
 		UniqueNumber:                   item.UniqueNumber.String,
-		CreatedAt:                      item.CreatedAt.Format("2006-01-02 15:04:05"),
-		UpdatedAt:                      item.UpdatedAt.Format("2006-01-02 15:04:05"),
+		CreatedAt:                      item.CreatedAt.In(time.FixedZone("CST", 8*3600)).Format("2006-01-02T15:04:05.000-07:00"),
+		UpdatedAt:                      item.UpdatedAt.In(time.FixedZone("CST", 8*3600)).Format("2006-01-02T15:04:05.000-07:00"),
 		Price:                          float32(item.Price.Float64),
 		// Color:                          int32(item.Color.Int64),
 		// EstimatedEmptyDeliveryDateFrom: formatTime(item.EstimatedEmptyDeliveryDateFrom),
@@ -701,7 +702,8 @@ func toOfferInfo(item *offers.Offers) types.OfferInfo {
 // formatTime 辅助格式化 NullTime。
 func formatTime(nt sql.NullTime) string {
 	if nt.Valid {
-		return nt.Time.Format("2006-01-02 15:04:05")
+		shanghaiZone := time.FixedZone("CST", 8*3600)
+		return nt.Time.In(shanghaiZone).Format("2006-01-02T15:04:05.000-07:00")
 	}
 	return ""
 }

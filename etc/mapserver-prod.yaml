@@ -6,7 +6,7 @@ SignatureSecret: "MapServerSecretKey2026"
 
 # MySQL 数据库配置（生产环境业务数据存储）
 MySQL:
-  DataSource: "go_readonly:HAIwaitan13!@tcp(172.22.164.13:3306)/container_house_production?charset=utf8mb4&parseTime=true&loc=Local&timeout=5s&readTimeout=10s&writeTimeout=10s"
+  DataSource: "go_readonly:HAIwaitan13!@tcp(172.22.164.13:3306)/container_house_production?charset=utf8mb4&parseTime=true&loc=UTC&timeout=5s&readTimeout=10s&writeTimeout=10s"
 
 # Redis 配置（生产环境 Redis-GEO 空间缓存）
 Redis:
