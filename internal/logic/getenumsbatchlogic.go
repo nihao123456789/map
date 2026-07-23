@@ -35,16 +35,16 @@ func (l *GetEnumsBatchLogic) GetEnumsBatch(req *types.EnumsBatchReq) (resp *type
 		return nil, err
 	}
 
-	enumsMap := make(map[string][]types.EnumItem)
+	enumsMap := make(map[string][]types.EnumInfo)
 	if len(req.Categories) > 0 {
 		// 初始化所有请求中传入的分类 key，即使某个分类下无任何数据，也向客户端返回空切片而非 null 或未定义，提高前端健壮性
 		for _, cat := range req.Categories {
-			enumsMap[cat] = make([]types.EnumItem, 0)
+			enumsMap[cat] = make([]types.EnumInfo, 0)
 		}
 	}
 
 	for _, item := range enumsData {
-		enumsMap[item.Category] = append(enumsMap[item.Category], types.EnumItem{
+		enumsMap[item.Category] = append(enumsMap[item.Category], types.EnumInfo{
 			// Id:            item.Id,
 			Category:      item.Category,
 			CategoryName:  item.CategoryName,

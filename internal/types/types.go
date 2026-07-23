@@ -6,14 +6,14 @@ package types
 import "encoding/json"
 
 type CompanyInfo struct {
-	Id               int64             `json:"id"`
-	Name             string            `json:"name"` // 企业官方名称
-	LocationId       int64             `json:"location_id"`
+	Id         int64  `json:"id"`
+	Name       string `json:"name"` // 企业官方名称
+	LocationId int64  `json:"location_id"`
 	// Telephone        string            `json:"telephone"`
 	// Email            string            `json:"email"`
 	// Usci             string            `json:"usci"`
-	Status           int64             `json:"status"`
-	ReviewLevel      float32           `json:"review_level"`
+	Status      int64   `json:"status"`
+	ReviewLevel float32 `json:"review_level"`
 	// ReviewsCount     int64             `json:"reviews_count"`
 	// IsOfficial       bool              `json:"is_official"`
 	// Address          string            `json:"address"`
@@ -21,8 +21,8 @@ type CompanyInfo struct {
 }
 
 type DepotInfo struct {
-	Id           int64   `json:"id"`
-	Name         string  `json:"name"` // 堆场英文/通用名称
+	Id   int64  `json:"id"`
+	Name string `json:"name"` // 堆场英文/通用名称
 	// PostalCode   string  `json:"postal_code"`
 	// Website      string  `json:"website"`
 	// PhoneNumber  string  `json:"phone_number"`
@@ -30,20 +30,20 @@ type DepotInfo struct {
 	// Country      string  `json:"country"`
 	// ContactName  string  `json:"contact_name"`
 	// Email        string  `json:"email"`
-	LocationId   int64   `json:"location_id"`
+	LocationId int64 `json:"location_id"`
 	// LocalName    string  `json:"local_name"`
 	// LocalAddress string  `json:"local_address"`
 	// AddressLine1 string  `json:"address_line1"`
 	// AddressLine2 string  `json:"address_line2"`
-	Lat          float32 `json:"lat"`
-	Lng          float32 `json:"lng"`
+	Lat float32 `json:"lat"`
+	Lng float32 `json:"lng"`
 }
 
 type LocationInfo struct {
-	Id          int64   `json:"id"`
-	Name        string  `json:"name"` // 区域英文缩写名
-	Type        string  `json:"type"`
-	EnglishName string  `json:"english_name"`
+	Id          int64  `json:"id"`
+	Name        string `json:"name"` // 区域英文缩写名
+	Type        string `json:"type"`
+	EnglishName string `json:"english_name"`
 	// Lat         float32 `json:"lat"`
 	// Lng         float32 `json:"lng"`
 	// Level       int32   `json:"level"`
@@ -52,21 +52,21 @@ type LocationInfo struct {
 }
 
 type MembershipBadge struct {
-	Kind        string `json:"kind"`        // 类别，例如 trading, leasing
-	Slug        string `json:"slug"`        // 会员唯一标志名，例如 trading_founding
-	Name        string `json:"name"`        // 会员中文名称
-	NameEn      string `json:"name_en"`      // 会员英文名称
+	Kind   string `json:"kind"`    // 类别，例如 trading, leasing
+	Slug   string `json:"slug"`    // 会员唯一标志名，例如 trading_founding
+	Name   string `json:"name"`    // 会员中文名称
+	NameEn string `json:"name_en"` // 会员英文名称
 	// DisplayName string `json:"display_name"` // 徽章展示名称
 	// ExpiresAt   string `json:"expires_at"`   // 过期时间，RFC3339 格式
 }
 
 type OfferInfo struct {
-	Id                             int64         `json:"id"`
-	Condition                      int32         `json:"condition"`
-	Type                           string        `json:"type"`
+	Id        int64  `json:"id"`
+	Condition int32  `json:"condition"`
+	Type      string `json:"type"`
 	// PickupLocationId               int32         `json:"pickup_location_id"`
 	// DropoffLocationId              int32         `json:"dropoff_location_id"`
-	Quantity                       int32         `json:"quantity"` // 集装箱数量
+	Quantity int32 `json:"quantity"` // 集装箱数量
 	// PickupCharge                   float32       `json:"pickup_charge"`
 	// FreeDays                       int32         `json:"free_days"`
 	// PerDiems                       float32       `json:"per_diems"`
@@ -77,12 +77,12 @@ type OfferInfo struct {
 	// DepreciationPerYear            float32       `json:"depreciation_per_year"`
 	// MinimumReplacementValue        float32       `json:"minimum_replacement_value"`
 	// AdditionalInformation          string        `json:"additional_information"`
-	UserId                         int32         `json:"user_id"`
-	CompanyId                      int32         `json:"company_id"`
-	Direction                      int32         `json:"direction"`
+	UserId    int32 `json:"user_id"`
+	CompanyId int32 `json:"company_id"`
+	Direction int32 `json:"direction"`
 	// ValidDays                      int32         `json:"valid_days"`
-	EquipmentType                  int32         `json:"equipment_type"`
-	CommercialTerm                 int32         `json:"commercial_term"`
+	EquipmentType  int32 `json:"equipment_type"`
+	CommercialTerm int32 `json:"commercial_term"`
 	// Comments                       string        `json:"comments"`
 	// ReviewsCount                   int32         `json:"reviews_count"`
 	// Prefixes                       string        `json:"prefixes"`
@@ -90,11 +90,11 @@ type OfferInfo struct {
 	// ManufacturerId                 int32         `json:"manufacturer_id"`
 	// DamageProtectionPlan           float32       `json:"damage_protection_plan"`
 	// NegotiationsCount              int32         `json:"negotiations_count"`
-	Category                       int32         `json:"category"`
+	Category int32 `json:"category"`
 	// ExpiresAt                      string        `json:"expires_at"`
 	// ReviewId                       int32         `json:"review_id"`
 	// Detail                         string        `json:"detail"`
-	Status                         int32         `json:"status"`
+	Status int32 `json:"status"`
 	// DeletedAt                      string        `json:"deleted_at"`
 	// ExpiresIn                      int32         `json:"expires_in"`
 	// ReadyForPickupOn               string        `json:"ready_for_pickup_on"`
@@ -103,35 +103,35 @@ type OfferInfo struct {
 	// WithLockBox                    bool          `json:"with_lock_box"`
 	// WithForkliftPockets            bool          `json:"with_forklift_pockets"`
 	// SellFor                        int32         `json:"sell_for"`
-	LocationId                     int32         `json:"location_id"`
+	LocationId int32 `json:"location_id"`
 	// Name                           string        `json:"name"`
-	ImagesCount                    int32         `json:"images_count"`
+	ImagesCount int32 `json:"images_count"`
 	// DocumentsCount                 int32         `json:"documents_count"`
 	// TradeType                      int32         `json:"trade_type"`
 	// ExpectedDeliveryOn             string        `json:"expected_delivery_on"`
 	// ExpectedDeliveryFrom           string        `json:"expected_delivery_from"`
 	// ExpectedDeliveryTo             string        `json:"expected_delivery_to"`
-	DepotId                        int32         `json:"depot_id"`
-	UniqueNumber                   string        `json:"unique_number"` // 挂单系统流转唯一跟踪号
-	CreatedAt                      string        `json:"created_at"`
-	UpdatedAt                      string        `json:"updated_at"`
-	Price                          float32       `json:"price"` // 单价
+	DepotId      int32   `json:"depot_id"`
+	UniqueNumber string  `json:"unique_number"` // 挂单系统流转唯一跟踪号
+	CreatedAt    string  `json:"created_at"`
+	UpdatedAt    string  `json:"updated_at"`
+	Price        float32 `json:"price"` // 单价
 	// Color                          int32         `json:"color"`
 	// EstimatedEmptyDeliveryDateFrom string        `json:"estimated_empty_delivery_date_from"`
 	// OfferType                      int32         `json:"offer_type"`
 	// Source                         int32         `json:"source"`
 	// PickupChargePayer              int32         `json:"pickup_charge_payer"`
 	// InsuranceFee                   float32       `json:"insurance_fee"`
-	YearOfManufactureRangeFrom     int32         `json:"year_of_manufacture_range_from"` // 要求出厂年份起
-	YearOfManufactureRangeTo       int32         `json:"year_of_manufacture_range_to"`   // 要求出厂年份止
+	YearOfManufactureRangeFrom int32 `json:"year_of_manufacture_range_from"` // 要求出厂年份起
+	YearOfManufactureRangeTo   int32 `json:"year_of_manufacture_range_to"`   // 要求出厂年份止
 	// CscTestCertificate             bool          `json:"csc_test_certificate"`
 	// EquipmentTypeId                int32         `json:"equipment_type_id"`
 	// InsuranceType                  int32         `json:"insurance_type"`
 	// InsuranceDays                  int32         `json:"insurance_days"`
 	// Extra                          string        `json:"extra"`
-	Colors                         string        `json:"colors"` // 支持的备选颜色
+	Colors string `json:"colors"` // 支持的备选颜色
 	// PinnedAt                       string        `json:"pinned_at"`
-	BumpedAt                       string        `json:"bumped_at"`
+	BumpedAt string `json:"bumped_at"`
 	// StorageFreeDays                int32         `json:"storage_free_days"`
 	// ConditionTagIds                string        `json:"condition_tag_ids"`
 	// ConditionLogo                  int32         `json:"condition_logo"`
@@ -151,62 +151,49 @@ type OfferInfo struct {
 	// IsExpired                      bool          `json:"is_expired"`
 	// DataSource                     int32         `json:"data_source"`
 	// Meta                           string        `json:"meta"`
-	IsNonNegotiable                bool          `json:"is_non_negotiable"`
+	IsNonNegotiable bool `json:"is_non_negotiable"`
 	// HasDamages                     bool          `json:"has_damages"`
 	// WithEasyOpenDoor               bool          `json:"with_easy_open_door"`
-	CompanyInfo                    *CompanyInfo  `json:"company_info,optional"`  // 公司信息详情
-	DepotInfo                      *DepotInfo    `json:"depot_info,optional"`    // 堆场信息详情
-	LocationInfo                   *LocationInfo `json:"location_info,optional"` // 地理位置树节点信息详情
-	ConditionInfo                  *EnumInfo     `json:"condition_info,optional"`      // 箱况详细信息详情
-	EquipmentTypeInfo              *EnumInfo     `json:"equipment_type_info,optional"` // 箱型详细信息详情
-	CommercialTermInfo             *EnumInfo     `json:"commercial_term_info,optional"` // 贸易条款（提箱方式）详细信息详情
-	CategoryInfo                   *EnumInfo     `json:"category_info,optional"`        // 挂单分类详细信息详情
+	CompanyInfo        *CompanyInfo  `json:"company_info,optional"`         // 公司信息详情
+	DepotInfo          *DepotInfo    `json:"depot_info,optional"`           // 堆场信息详情
+	LocationInfo       *LocationInfo `json:"location_info,optional"`        // 地理位置树节点信息详情
+	ConditionInfo      *EnumInfo     `json:"condition_info,optional"`       // 箱况详细信息详情
+	EquipmentTypeInfo  *EnumInfo     `json:"equipment_type_info,optional"`  // 箱型详细信息详情
+	CommercialTermInfo *EnumInfo     `json:"commercial_term_info,optional"` // 贸易条款（提箱方式）详细信息详情
+	CategoryInfo       *EnumInfo     `json:"category_info,optional"`        // 挂单分类详细信息详情
 }
 
 type TradingListReq struct {
 	LocationId                 int64  `json:"location_id,optional"`
 	Direction                  string `json:"direction"`
-	Category                   string `json:"category,optional"`                   // 箱型分类：dry (干箱)，tank (罐箱)
-	Condition                  string `json:"condition,optional"`                  // 箱况：brand_new, excellent, cargo_worthy, wwt, as_is
-	Color                      string `json:"color,optional"`                      // 颜色：如 RAL 1015, RAL 5010 等
-	EquipmentType              string `json:"equipment_type,optional"`              // 箱型规格参数，如 twenty_dry_container, forty_dry_container, forty_high_cube 等
-	CommercialTerm             string `json:"commercial_term,optional"`             // 提箱方式，如 gate_buy, pick_up
+	Category                   string `json:"category,optional"`                       // 箱型分类：dry (干箱)，tank (罐箱)
+	Condition                  string `json:"condition,optional"`                      // 箱况：brand_new, excellent, cargo_worthy, wwt, as_is
+	Color                      string `json:"color,optional"`                          // 颜色：如 RAL 1015, RAL 5010 等
+	EquipmentType              string `json:"equipment_type,optional"`                 // 箱型规格参数，如 twenty_dry_container, forty_dry_container, forty_high_cube 等
+	CommercialTerm             string `json:"commercial_term,optional"`                // 提箱方式，如 gate_buy, pick_up
 	YearOfManufactureRangeFrom int32  `json:"year_of_manufacture_range_from,optional"` // 生产年份起步，如 2025
-	LastId                     int64  `json:"last_id,optional"`                    // 游标分页：上一页最后一条记录的ID
-	PageSize                   int64  `json:"page_size,optional"`                  // 每页数量
+	LastId                     int64  `json:"last_id,optional"`                        // 游标分页：上一页最后一条记录的ID
+	PageSize                   int64  `json:"page_size,optional"`                      // 每页数量
 }
 
 type TradingListResp struct {
-	Total    int64       `json:"total"`    // 总数量
+	Total    int64       `json:"total"`     // 总数量
 	LastId   int64       `json:"last_id"`   // 最后一条记录的ID
 	PageSize int64       `json:"page_size"` // 每页数量
-	List     []OfferInfo `json:"list"`     // list列表
+	List     []OfferInfo `json:"list"`      // list列表
 }
 
 type EnumInfo struct {
 	// Id            int64  `json:"id"`
-	Category      string `json:"category"`
-	CategoryName  string `json:"category_name"`
-	ItemId        string `json:"item_id"`
-	Value         string `json:"value"`
-	Name          string `json:"name"`
-	NameZh        string `json:"name_zh"`
+	Category     string `json:"category"`
+	CategoryName string `json:"category_name"`
+	ItemId       string `json:"item_id"`
+	Value        string `json:"value"`
+	Name         string `json:"name"`
+	NameZh       string `json:"name_zh"`
 	// Description   string `json:"description"`
 	// DescriptionZh string `json:"description_zh"`
-	Extra         string `json:"extra"`
-}
-
-type EnumItem struct {
-	// Id            int64  `json:"id"`
-	Category      string `json:"category"`
-	CategoryName  string `json:"category_name"`
-	ItemId        string `json:"item_id"`
-	Value         string `json:"value"`
-	Name          string `json:"name"`
-	NameZh        string `json:"name_zh"`
-	// Description   string `json:"description"`
-	// DescriptionZh string `json:"description_zh"`
-	Extra         string `json:"extra"`
+	Extra string `json:"extra"`
 }
 
 type EnumsBatchReq struct {
@@ -214,11 +201,10 @@ type EnumsBatchReq struct {
 }
 
 type EnumsBatchResp struct {
-	Enums map[string][]EnumItem `json:"enums"` // 按 category 分组的字典映射
+	Enums map[string][]EnumInfo `json:"enums"` // 按 category 分组的字典映射
 }
 
 // MarshalJSON 使得 EnumsBatchResp 在进行 JSON 序列化时直接展开 Enums 内容，拍平接口数据。
 func (r EnumsBatchResp) MarshalJSON() ([]byte, error) {
 	return json.Marshal(r.Enums)
 }
-
