@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+	"os"
+	"strings"
 
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -173,5 +175,273 @@ func TestGetTradingsList_Signature(t *testing.T) {
 	if !handlerCalled {
 		t.Error("签名正确时，中间件应该放行")
 	}
+}
+
+// TestFixSwagger 用来在单元测试环境中以白名单程序运行，对 swagger.json 进行蛇形命名重构、字段删除和 EnumItem/EnumInfo 合并。
+func TestFixSwagger(t *testing.T) {
+	filePath := `../../swagger.json`
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		t.Fatalf("读取 swagger.json 失败: %v", err)
+	}
+
+	// 1. 全局字符串替换 (ConditionInfo -> EnumInfo)
+	content := string(data)
+	content = strings.ReplaceAll(content, "#/definitions/ConditionInfo", "#/definitions/EnumInfo")
+
+	var swagger map[string]interface{}
+	if err := json.Unmarshal([]byte(content), &swagger); err != nil {
+		t.Fatalf("解析 JSON 失败: %v", err)
+	}
+
+	definitions, ok := swagger["definitions"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("未找到 definitions 节点")
+	}
+
+	// 2. 将 ConditionInfo 改名为 EnumInfo，并裁剪字段
+	if condInfo, exists := definitions["ConditionInfo"]; exists {
+		definitions["EnumInfo"] = condInfo
+		delete(definitions, "ConditionInfo")
+
+		if enumMap, ok := definitions["EnumInfo"].(map[string]interface{}); ok {
+			if props, ok := enumMap["properties"].(map[string]interface{}); ok {
+				delete(props, "id")
+				delete(props, "description")
+				delete(props, "description_zh")
+			}
+		}
+	}
+
+	// 3. 修改 TradingData 字段
+	renameProp := func(props map[string]interface{}, oldKey, newKey string) {
+		if val, ok := props[oldKey]; ok {
+			props[newKey] = val
+			delete(props, oldKey)
+		}
+	}
+
+	if tradingData, exists := definitions["TradingData"].(map[string]interface{}); exists {
+		if props, ok := tradingData["properties"].(map[string]interface{}); ok {
+			renameProp(props, "lastid", "last_id")
+			renameProp(props, "pagesize", "page_size")
+		}
+		if req, ok := tradingData["required"].([]interface{}); ok {
+			for i, v := range req {
+				if v == "lastid" {
+					req[i] = "last_id"
+				}
+				if v == "pagesize" {
+					req[i] = "page_size"
+				}
+			}
+		}
+	}
+
+	// 4. 修改 CompanyInfo 字段 (只保留 id, name, location_id, status, review_level, membership_badges)
+	if compInfo, exists := definitions["CompanyInfo"].(map[string]interface{}); exists {
+		if props, ok := compInfo["properties"].(map[string]interface{}); ok {
+			delete(props, "telephone")
+			delete(props, "email")
+			delete(props, "usci")
+			delete(props, "reviewscount")
+			delete(props, "isofficial")
+			delete(props, "address")
+
+			renameProp(props, "locationid", "location_id")
+			renameProp(props, "membershipbadges", "membership_badges")
+			renameProp(props, "reviewlevel", "review_level")
+		}
+	}
+
+	// 5. 修改 DepotInfo 字段
+	if depotInfo, exists := definitions["DepotInfo"].(map[string]interface{}); exists {
+		if props, ok := depotInfo["properties"].(map[string]interface{}); ok {
+			delete(props, "postalcode")
+			delete(props, "website")
+			delete(props, "phonenumber")
+			delete(props, "city")
+			delete(props, "country")
+			delete(props, "contactname")
+			delete(props, "email")
+			delete(props, "localname")
+			delete(props, "localaddress")
+			delete(props, "addressline1")
+			delete(props, "addressline2")
+
+			renameProp(props, "locationid", "location_id")
+		}
+	}
+
+	// 6. 修改 LocationInfo 字段
+	if locInfo, exists := definitions["LocationInfo"].(map[string]interface{}); exists {
+		if props, ok := locInfo["properties"].(map[string]interface{}); ok {
+			delete(props, "level")
+			delete(props, "fullname")
+			delete(props, "fullnamecn")
+			
+			renameProp(props, "englishname", "english_name")
+		}
+	}
+
+	// 7. 修改 MembershipBadge 字段
+	if badge, exists := definitions["MembershipBadge"].(map[string]interface{}); exists {
+		if props, ok := badge["properties"].(map[string]interface{}); ok {
+			delete(props, "displayname")
+			delete(props, "expiresat")
+		}
+	}
+
+	// 8. 覆盖定义全新的 OfferInfo properties
+	offerInfoProps := map[string]interface{}{
+		"id": map[string]interface{}{
+			"description": "挂单唯一主键 ID",
+			"format":      "int64",
+			"type":        "integer",
+		},
+		"condition": map[string]interface{}{
+			"description": "集装箱质量状况：1=新箱，2=旧箱",
+			"type":        "integer",
+		},
+		"type": map[string]interface{}{
+			"description": "挂单业务类型（固定为 Trading）",
+			"type":        "string",
+		},
+		"quantity": map[string]interface{}{
+			"description": "集装箱数量",
+			"type":        "integer",
+		},
+		"user_id": map[string]interface{}{
+			"description": "创建挂单的用户 ID",
+			"format":      "int64",
+			"type":        "integer",
+		},
+		"company_id": map[string]interface{}{
+			"description": "关联发布企业 ID",
+			"format":      "int64",
+			"type":        "integer",
+		},
+		"direction": map[string]interface{}{
+			"description": "交易方向映射：0=买入 (supply)，1=卖出 (demand)",
+			"type":        "integer",
+		},
+		"equipment_type": map[string]interface{}{
+			"description": "集装箱规格属性",
+			"type":        "integer",
+		},
+		"commercial_term": map[string]interface{}{
+			"description": "条款机制",
+			"type":        "integer",
+		},
+		"category": map[string]interface{}{
+			"description": "类别",
+			"type":        "integer",
+		},
+		"status": map[string]interface{}{
+			"description": "挂单上架状态：10=已发布",
+			"type":        "integer",
+		},
+		"location_id": map[string]interface{}{
+			"description": "位置关联 ID",
+			"format":      "int64",
+			"type":        "integer",
+		},
+		"images_count": map[string]interface{}{
+			"description": "图片张数",
+			"type":        "integer",
+		},
+		"depot_id": map[string]interface{}{
+			"description": "关联堆场唯一 ID",
+			"format":      "int64",
+			"type":        "integer",
+		},
+		"unique_number": map[string]interface{}{
+			"description": "挂单系统流转唯一跟踪号",
+			"type":        "string",
+		},
+		"created_at": map[string]interface{}{
+			"description": "创建时间",
+			"type":        "string",
+		},
+		"updated_at": map[string]interface{}{
+			"description": "更新时间",
+			"type":        "string",
+		},
+		"price": map[string]interface{}{
+			"description": "单价",
+			"type":        "number",
+			"format":      "float",
+		},
+		"year_of_manufacture_range_from": map[string]interface{}{
+			"description": "要求出厂年份起",
+			"type":        "integer",
+		},
+		"year_of_manufacture_range_to": map[string]interface{}{
+			"description": "要求出厂年份止",
+			"type":        "integer",
+		},
+		"colors": map[string]interface{}{
+			"description": "支持 the 备选颜色",
+			"type":        "string",
+		},
+		"bumped_at": map[string]interface{}{
+			"description": "排序重力刷新时间",
+			"type":        "string",
+		},
+		"is_non_negotiable": map[string]interface{}{
+			"description": "是否属于一口价不可议价单",
+			"type":        "boolean",
+		},
+		"company_info": map[string]interface{}{
+			"$ref":        "#/definitions/CompanyInfo",
+			"description": "公司信息详情",
+		},
+		"depot_info": map[string]interface{}{
+			"$ref":        "#/definitions/DepotInfo",
+			"description": "堆场信息详情",
+		},
+		"location_info": map[string]interface{}{
+			"$ref":        "#/definitions/LocationInfo",
+			"description": "地理位置树节点信息详情",
+		},
+		"condition_info": map[string]interface{}{
+			"$ref":        "#/definitions/EnumInfo",
+			"description": "箱况详细信息详情",
+		},
+		"equipment_type_info": map[string]interface{}{
+			"$ref":        "#/definitions/EnumInfo",
+			"description": "箱型详细信息详情",
+		},
+		"commercial_term_info": map[string]interface{}{
+			"$ref":        "#/definitions/EnumInfo",
+			"description": "贸易条款（提箱方式）详细信息详情",
+		},
+		"category_info": map[string]interface{}{
+			"$ref":        "#/definitions/EnumInfo",
+			"description": "挂单分类详细信息详情",
+		},
+	}
+
+	if offerInfo, exists := definitions["OfferInfo"].(map[string]interface{}); exists {
+		offerInfo["properties"] = offerInfoProps
+	}
+
+	// 9. 删除 EnumItem 并全局替换引用为 EnumInfo
+	delete(definitions, "EnumItem")
+
+	updatedData, err := json.MarshalIndent(swagger, "", "    ")
+	if err != nil {
+		t.Fatalf("序列化 JSON 失败: %v", err)
+	}
+
+	finalContent := string(updatedData)
+	finalContent = strings.ReplaceAll(finalContent, "#/definitions/EnumItem", "#/definitions/EnumInfo")
+
+	err = os.WriteFile(filePath, []byte(finalContent), 0644)
+	if err != nil {
+		t.Fatalf("写入 swagger.json 失败: %v", err)
+	}
+
+	t.Log("swagger.json 修正成功！")
 }
 

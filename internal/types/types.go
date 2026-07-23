@@ -44,8 +44,8 @@ type LocationInfo struct {
 	Name        string `json:"name"` // 区域英文缩写名
 	Type        string `json:"type"`
 	EnglishName string `json:"english_name"`
-	// Lat         float32 `json:"lat"`
-	// Lng         float32 `json:"lng"`
+	Lat         float32 `json:"lat"`
+	Lng         float32 `json:"lng"`
 	// Level       int32   `json:"level"`
 	// FullName    string  `json:"full_name"`
 	// FullNameCn  string  `json:"full_name_cn"`
