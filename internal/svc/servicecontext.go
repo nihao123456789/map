@@ -14,6 +14,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
+	"github.com/zeromicro/go-zero/core/collection"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 
 	"map-server/internal/config"
@@ -85,6 +86,9 @@ type ServiceContext struct {
 
 	// RateLimiter 全局限流器
 	RateLimiter *rate.Limiter
+
+	// EnumsCache 系统字典本地定时缓存，失效时间 5 分钟，防数据库击穿
+	EnumsCache *collection.Cache
 }
 
 // NewServiceContext 初始化并返回 ServiceContext。
@@ -139,6 +143,11 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	postGISYardModel := postgisModel.NewPostGISYardModel(pgPool)
 	postGISContainerModel := postgisModel.NewPostGISContainerModel(pgPool)
 
+	enumsCache, err := collection.NewCache(5*time.Minute, collection.WithLimit(1000))
+	if err != nil {
+		panic(fmt.Sprintf("创建字典内存缓存失败: %v", err))
+	}
+
 	return &ServiceContext{
 		Config:                c,
 		DB:                    db,
@@ -156,6 +165,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		EnumsModel:               enumsModel,
 		SignatureMiddleware:      middleware.NewSignatureMiddleware(c.SignatureSecret).Handle,
 		RateLimiter:              rate.NewLimiter(rate.Limit(c.RateLimit.Limit), c.RateLimit.Burst),
+		EnumsCache:               enumsCache,
 	}
 }
 

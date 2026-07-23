@@ -67,11 +67,23 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 
 	if len(req.Category) > 0 {
 		gParam.Go(func() error {
-			var err error
-			enumCat, err = l.svcCtx.EnumsModel.FindOneByCategoryAndValue(gCtxParam, enums.CategoryContainerCategory, req.Category)
-			if err != nil && err != enums.ErrNotFound {
+			key := "enum_val:" + enums.CategoryContainerCategory + ":" + req.Category
+			val, err := l.svcCtx.EnumsCache.Take(key, func() (interface{}, error) {
+				res, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(gCtxParam, enums.CategoryContainerCategory, req.Category)
+				if err != nil && err != enums.ErrNotFound {
+					return nil, err
+				}
+				if err == enums.ErrNotFound {
+					return &enums.Enums{ItemId: "0"}, nil // 哨兵值防御缓存穿透
+				}
+				return res, nil
+			})
+			if err != nil {
 				l.Errorf("从 enums 数据表获取箱型分类失败: value=%s, err=%v", req.Category, err)
 				return err
+			}
+			if cached, ok := val.(*enums.Enums); ok && cached.ItemId != "0" {
+				enumCat = cached
 			}
 			return nil
 		})
@@ -79,11 +91,23 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 
 	if len(req.EquipmentType) > 0 {
 		gParam.Go(func() error {
-			var err error
-			enumEquip, err = l.svcCtx.EnumsModel.FindOneByCategoryAndValue(gCtxParam, enums.CategoryEquipmentTypes, req.EquipmentType)
-			if err != nil && err != enums.ErrNotFound {
+			key := "enum_val:" + enums.CategoryEquipmentTypes + ":" + req.EquipmentType
+			val, err := l.svcCtx.EnumsCache.Take(key, func() (interface{}, error) {
+				res, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(gCtxParam, enums.CategoryEquipmentTypes, req.EquipmentType)
+				if err != nil && err != enums.ErrNotFound {
+					return nil, err
+				}
+				if err == enums.ErrNotFound {
+					return &enums.Enums{ItemId: "0"}, nil // 哨兵值防御缓存穿透
+				}
+				return res, nil
+			})
+			if err != nil {
 				l.Errorf("从 enums 数据表获取箱型规格失败: value=%s, err=%v", req.EquipmentType, err)
 				return err
+			}
+			if cached, ok := val.(*enums.Enums); ok && cached.ItemId != "0" {
+				enumEquip = cached
 			}
 			return nil
 		})
@@ -91,11 +115,23 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 
 	if len(req.Condition) > 0 {
 		gParam.Go(func() error {
-			var err error
-			enumCond, err = l.svcCtx.EnumsModel.FindOneByCategoryAndValue(gCtxParam, enums.CategoryConditions, req.Condition)
-			if err != nil && err != enums.ErrNotFound {
+			key := "enum_val:" + enums.CategoryConditions + ":" + req.Condition
+			val, err := l.svcCtx.EnumsCache.Take(key, func() (interface{}, error) {
+				res, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(gCtxParam, enums.CategoryConditions, req.Condition)
+				if err != nil && err != enums.ErrNotFound {
+					return nil, err
+				}
+				if err == enums.ErrNotFound {
+					return &enums.Enums{ItemId: "0"}, nil // 哨兵值防御缓存穿透
+				}
+				return res, nil
+			})
+			if err != nil {
 				l.Errorf("从 enums 数据表获取箱况失败: value=%s, err=%v", req.Condition, err)
 				return err
+			}
+			if cached, ok := val.(*enums.Enums); ok && cached.ItemId != "0" {
+				enumCond = cached
 			}
 			return nil
 		})
@@ -103,11 +139,23 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 
 	if len(req.CommercialTerm) > 0 {
 		gParam.Go(func() error {
-			var err error
-			enumTerm, err = l.svcCtx.EnumsModel.FindOneByCategoryAndValue(gCtxParam, enums.CategoryCommercialTerm, req.CommercialTerm)
-			if err != nil && err != enums.ErrNotFound {
+			key := "enum_val:" + enums.CategoryCommercialTerm + ":" + req.CommercialTerm
+			val, err := l.svcCtx.EnumsCache.Take(key, func() (interface{}, error) {
+				res, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(gCtxParam, enums.CategoryCommercialTerm, req.CommercialTerm)
+				if err != nil && err != enums.ErrNotFound {
+					return nil, err
+				}
+				if err == enums.ErrNotFound {
+					return &enums.Enums{ItemId: "0"}, nil // 哨兵值防御缓存穿透
+				}
+				return res, nil
+			})
+			if err != nil {
 				l.Errorf("从 enums 数据表获取提箱方式失败: value=%s, err=%v", req.CommercialTerm, err)
 				return err
+			}
+			if cached, ok := val.(*enums.Enums); ok && cached.ItemId != "0" {
+				enumTerm = cached
 			}
 			return nil
 		})
@@ -332,77 +380,153 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		})
 	}
 
-	// 4. 并发批量拉取箱况字典项详情
+	// 4. 并发从本地缓存加载箱况字典项详情
 	if len(conditionIdsMap) > 0 {
-		conditionIds := make([]string, 0, len(conditionIdsMap))
-		for id := range conditionIdsMap {
-			conditionIds = append(conditionIds, id)
-		}
 		g.Go(func() error {
-			enumsData, err := l.svcCtx.EnumsModel.FindByCategoryAndItemIds(gCtx, enums.CategoryConditions, conditionIds)
+			data, err := l.svcCtx.EnumsCache.Take("enums:"+enums.CategoryConditions, func() (interface{}, error) {
+				list, err := l.svcCtx.EnumsModel.FindByCategories(gCtx, []string{enums.CategoryConditions})
+				if err != nil {
+					return nil, err
+				}
+				res := make([]types.EnumInfo, 0, len(list))
+				for _, item := range list {
+					res = append(res, types.EnumInfo{
+						Category:     item.Category,
+						CategoryName: item.CategoryName,
+						ItemId:       item.ItemId,
+						Value:        item.Value,
+						Name:         item.Name,
+						NameZh:       item.NameZh,
+						Extra:        item.Extra,
+					})
+				}
+				return res, nil
+			})
 			if err != nil {
-				l.Errorf("批量拉取箱况字典数据失败: %v", err)
+				l.Errorf("并发获取箱况字典数据失败: %v", err)
 				return err
 			}
-			for _, val := range enumsData {
-				conditionsMap[val.ItemId] = toEnumInfo(val)
+			if cachedList, ok := data.([]types.EnumInfo); ok {
+				for _, val := range cachedList {
+					if _, exists := conditionIdsMap[val.ItemId]; exists {
+						valCopy := val
+						conditionsMap[val.ItemId] = &valCopy
+					}
+				}
 			}
 			return nil
 		})
 	}
 
-	// 5. 并发批量拉取箱型规格字典项详情
+	// 5. 并发从本地缓存加载箱型规格字典项详情
 	if len(equipmentTypeIdsMap) > 0 {
-		equipmentTypeIds := make([]string, 0, len(equipmentTypeIdsMap))
-		for id := range equipmentTypeIdsMap {
-			equipmentTypeIds = append(equipmentTypeIds, id)
-		}
 		g.Go(func() error {
-			enumsData, err := l.svcCtx.EnumsModel.FindByCategoryAndItemIds(gCtx, enums.CategoryEquipmentTypes, equipmentTypeIds)
+			data, err := l.svcCtx.EnumsCache.Take("enums:"+enums.CategoryEquipmentTypes, func() (interface{}, error) {
+				list, err := l.svcCtx.EnumsModel.FindByCategories(gCtx, []string{enums.CategoryEquipmentTypes})
+				if err != nil {
+					return nil, err
+				}
+				res := make([]types.EnumInfo, 0, len(list))
+				for _, item := range list {
+					res = append(res, types.EnumInfo{
+						Category:     item.Category,
+						CategoryName: item.CategoryName,
+						ItemId:       item.ItemId,
+						Value:        item.Value,
+						Name:         item.Name,
+						NameZh:       item.NameZh,
+						Extra:        item.Extra,
+					})
+				}
+				return res, nil
+			})
 			if err != nil {
-				l.Errorf("批量拉取箱型字典数据失败: %v", err)
+				l.Errorf("并发获取箱型字典数据失败: %v", err)
 				return err
 			}
-			for _, val := range enumsData {
-				equipmentTypesMap[val.ItemId] = toEnumInfo(val)
+			if cachedList, ok := data.([]types.EnumInfo); ok {
+				for _, val := range cachedList {
+					if _, exists := equipmentTypeIdsMap[val.ItemId]; exists {
+						valCopy := val
+						equipmentTypesMap[val.ItemId] = &valCopy
+					}
+				}
 			}
 			return nil
 		})
 	}
 
-	// 6. 并发批量拉取提箱方式字典项详情
+	// 6. 并发从本地缓存加载提箱方式字典项详情
 	if len(commercialTermIdsMap) > 0 {
-		commercialTermIds := make([]string, 0, len(commercialTermIdsMap))
-		for id := range commercialTermIdsMap {
-			commercialTermIds = append(commercialTermIds, id)
-		}
 		g.Go(func() error {
-			enumsData, err := l.svcCtx.EnumsModel.FindByCategoryAndItemIds(gCtx, enums.CategoryCommercialTerm, commercialTermIds)
+			data, err := l.svcCtx.EnumsCache.Take("enums:"+enums.CategoryCommercialTerm, func() (interface{}, error) {
+				list, err := l.svcCtx.EnumsModel.FindByCategories(gCtx, []string{enums.CategoryCommercialTerm})
+				if err != nil {
+					return nil, err
+				}
+				res := make([]types.EnumInfo, 0, len(list))
+				for _, item := range list {
+					res = append(res, types.EnumInfo{
+						Category:     item.Category,
+						CategoryName: item.CategoryName,
+						ItemId:       item.ItemId,
+						Value:        item.Value,
+						Name:         item.Name,
+						NameZh:       item.NameZh,
+						Extra:        item.Extra,
+					})
+				}
+				return res, nil
+			})
 			if err != nil {
-				l.Errorf("批量拉取贸易条款字典数据失败: %v", err)
+				l.Errorf("并发获取贸易条款字典数据失败: %v", err)
 				return err
 			}
-			for _, val := range enumsData {
-				commercialTermsMap[val.ItemId] = toEnumInfo(val)
+			if cachedList, ok := data.([]types.EnumInfo); ok {
+				for _, val := range cachedList {
+					if _, exists := commercialTermIdsMap[val.ItemId]; exists {
+						valCopy := val
+						commercialTermsMap[val.ItemId] = &valCopy
+					}
+				}
 			}
 			return nil
 		})
 	}
 
-	// 7. 并发批量拉取箱型大类字典项详情
+	// 7. 并发从本地缓存加载箱型大类字典项详情
 	if len(categoryIdsMap) > 0 {
-		categoryIds := make([]string, 0, len(categoryIdsMap))
-		for id := range categoryIdsMap {
-			categoryIds = append(categoryIds, id)
-		}
 		g.Go(func() error {
-			enumsData, err := l.svcCtx.EnumsModel.FindByCategoryAndItemIds(gCtx, enums.CategoryContainerCategory, categoryIds)
+			data, err := l.svcCtx.EnumsCache.Take("enums:"+enums.CategoryContainerCategory, func() (interface{}, error) {
+				list, err := l.svcCtx.EnumsModel.FindByCategories(gCtx, []string{enums.CategoryContainerCategory})
+				if err != nil {
+					return nil, err
+				}
+				res := make([]types.EnumInfo, 0, len(list))
+				for _, item := range list {
+					res = append(res, types.EnumInfo{
+						Category:     item.Category,
+						CategoryName: item.CategoryName,
+						ItemId:       item.ItemId,
+						Value:        item.Value,
+						Name:         item.Name,
+						NameZh:       item.NameZh,
+						Extra:        item.Extra,
+					})
+				}
+				return res, nil
+			})
 			if err != nil {
-				l.Errorf("批量拉取箱型分类字典数据失败: %v", err)
+				l.Errorf("并发获取箱型分类字典数据失败: %v", err)
 				return err
 			}
-			for _, val := range enumsData {
-				categoriesMap[val.ItemId] = toEnumInfo(val)
+			if cachedList, ok := data.([]types.EnumInfo); ok {
+				for _, val := range cachedList {
+					if _, exists := categoryIdsMap[val.ItemId]; exists {
+						valCopy := val
+						categoriesMap[val.ItemId] = &valCopy
+					}
+				}
 			}
 			return nil
 		})
