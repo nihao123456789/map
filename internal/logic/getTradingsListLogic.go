@@ -55,75 +55,99 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		return &types.TradingListResp{List: []types.OfferInfo{}}, nil
 	}
 
-	// 解析 category 箱型分类：通过 EnumsModel 从 enums 数据表中根据 category = enums.CategoryContainerCategory 和 value 动态获取 item_id 的值
-	var categoryItemIDStr string = "0"
+	var (
+		enumCat   *enums.Enums
+		enumEquip *enums.Enums
+		enumCond  *enums.Enums
+		enumTerm  *enums.Enums
+	)
+
+	// 并发解析各字典分类参数，加速反查 item_id 流程
+	gParam, gCtxParam := errgroup.WithContext(l.ctx)
+
 	if len(req.Category) > 0 {
-		enumCat, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(l.ctx, enums.CategoryContainerCategory, req.Category)
-		if err != nil {
-			if err != enums.ErrNotFound {
+		gParam.Go(func() error {
+			var err error
+			enumCat, err = l.svcCtx.EnumsModel.FindOneByCategoryAndValue(gCtxParam, enums.CategoryContainerCategory, req.Category)
+			if err != nil && err != enums.ErrNotFound {
 				l.Errorf("从 enums 数据表获取箱型分类失败: value=%s, err=%v", req.Category, err)
-				return nil, err
+				return err
 			}
-		} else {
-			categoryItemIDStr = enumCat.ItemId
-		}
+			return nil
+		})
 	}
 
+	if len(req.EquipmentType) > 0 {
+		gParam.Go(func() error {
+			var err error
+			enumEquip, err = l.svcCtx.EnumsModel.FindOneByCategoryAndValue(gCtxParam, enums.CategoryEquipmentTypes, req.EquipmentType)
+			if err != nil && err != enums.ErrNotFound {
+				l.Errorf("从 enums 数据表获取箱型规格失败: value=%s, err=%v", req.EquipmentType, err)
+				return err
+			}
+			return nil
+		})
+	}
+
+	if len(req.Condition) > 0 {
+		gParam.Go(func() error {
+			var err error
+			enumCond, err = l.svcCtx.EnumsModel.FindOneByCategoryAndValue(gCtxParam, enums.CategoryConditions, req.Condition)
+			if err != nil && err != enums.ErrNotFound {
+				l.Errorf("从 enums 数据表获取箱况失败: value=%s, err=%v", req.Condition, err)
+				return err
+			}
+			return nil
+		})
+	}
+
+	if len(req.CommercialTerm) > 0 {
+		gParam.Go(func() error {
+			var err error
+			enumTerm, err = l.svcCtx.EnumsModel.FindOneByCategoryAndValue(gCtxParam, enums.CategoryCommercialTerm, req.CommercialTerm)
+			if err != nil && err != enums.ErrNotFound {
+				l.Errorf("从 enums 数据表获取提箱方式失败: value=%s, err=%v", req.CommercialTerm, err)
+				return err
+			}
+			return nil
+		})
+	}
+
+	if err := gParam.Wait(); err != nil {
+		return nil, err
+	}
+
+	var categoryItemIDStr = "0"
+	if enumCat != nil {
+		categoryItemIDStr = enumCat.ItemId
+	}
 	dbCategory, err := strconv.ParseInt(categoryItemIDStr, 10, 64)
 	if err != nil {
 		dbCategory = 0
 	}
 
-	// 解析 equipmentType 箱型规格：通过 EnumsModel 从 enums 数据表中根据 category = enums.CategoryEquipmentTypes 和 value 动态获取 item_id 的值
-	var equipItemIDStr string = "0"
-	if len(req.EquipmentType) > 0 {
-		enumEquip, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(l.ctx, enums.CategoryEquipmentTypes, req.EquipmentType)
-		if err != nil {
-			if err != enums.ErrNotFound {
-				l.Errorf("从 enums 数据表获取箱型规格失败: value=%s, err=%v", req.EquipmentType, err)
-				return nil, err
-			}
-		} else {
-			equipItemIDStr = enumEquip.ItemId
-		}
+	var equipItemIDStr = "0"
+	if enumEquip != nil {
+		equipItemIDStr = enumEquip.ItemId
 	}
-
 	dbEquipmentType, err := strconv.ParseInt(equipItemIDStr, 10, 64)
 	if err != nil {
 		dbEquipmentType = 0
 	}
 
-	// 解析 condition 箱况：通过 EnumsModel 从 enums 数据表中根据 category = enums.CategoryConditions 和 value 动态获取 item_id 的值
-	var itemIDStr string = "0"
-	enumItem, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(l.ctx, enums.CategoryConditions, req.Condition)
-	if err != nil {
-		if err != enums.ErrNotFound {
-			l.Errorf("从 enums 数据表获取箱况失败: value=%s, err=%v", req.Condition, err)
-			return nil, err
-		}
-	} else {
-		itemIDStr = enumItem.ItemId
+	var itemIDStr = "0"
+	if enumCond != nil {
+		itemIDStr = enumCond.ItemId
 	}
-
 	dbCondition, err := strconv.ParseInt(itemIDStr, 10, 64)
 	if err != nil {
 		dbCondition = 0
 	}
 
-	// 解析 commercialTerm 提箱方式：通过 EnumsModel 从 enums 数据表中根据 category = enums.CategoryCommercialTerm 和 value 动态获取 item_id 的值
-	var termItemIDStr string = "0"
-	if len(req.CommercialTerm) > 0 {
-		enumTerm, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(l.ctx, enums.CategoryCommercialTerm, req.CommercialTerm)
-		if err != nil {
-			if err != enums.ErrNotFound {
-				l.Errorf("从 enums 数据表获取提箱方式失败: value=%s, err=%v", req.CommercialTerm, err)
-				return nil, err
-			}
-		} else {
-			termItemIDStr = enumTerm.ItemId
-		}
+	var termItemIDStr = "0"
+	if enumTerm != nil {
+		termItemIDStr = enumTerm.ItemId
 	}
-
 	dbCommercialTerm, err := strconv.ParseInt(termItemIDStr, 10, 64)
 	if err != nil {
 		dbCommercialTerm = 0
@@ -131,9 +155,6 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 
 	// 解析 color 颜色参数：直接使用传入的颜色标识（如 "RAL 1015"），供底层 colors 字段的模糊匹配使用
 	dbColor := req.Color
-
-
-
 
 	// 游标分页限制机制，防范海量数据查询导致内存溢出 (OOM) 与 GC 压力
 	limit := req.PageSize
@@ -143,17 +164,35 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		limit = 100 // 最大限制单页100条
 	}
 
-	// 统计满足条件的挂单总记录数
-	totalCount, err := l.svcCtx.OffersModel.CountByLocationIdAndDirection(l.ctx, req.LocationId, dbDirection, dbCategory, dbCondition, dbColor, dbEquipmentType, dbCommercialTerm, int64(req.YearOfManufactureRangeFrom))
-	if err != nil {
-		l.Errorf("统计挂单总数失败: %v", err)
-		return nil, err
-	}
+	var (
+		totalCount int64
+		offersData []*offers.Offers
+	)
 
-	// 从 MySQL 中查询挂单列表（支持游标分页）
-	offersData, err := l.svcCtx.OffersModel.FindByLocationIdAndDirection(l.ctx, req.LocationId, dbDirection, dbCategory, dbCondition, dbColor, dbEquipmentType, dbCommercialTerm, int64(req.YearOfManufactureRangeFrom), req.LastId, limit)
-	if err != nil {
-		l.Errorf("查询挂单列表失败: %v", err)
+	// 并发查询挂单总数及当前页列表数据，降低首次查询的主链路耗时
+	gOffers, gCtxOffers := errgroup.WithContext(l.ctx)
+
+	gOffers.Go(func() error {
+		var err error
+		totalCount, err = l.svcCtx.OffersModel.CountByLocationIdAndDirection(gCtxOffers, req.LocationId, dbDirection, dbCategory, dbCondition, dbColor, dbEquipmentType, dbCommercialTerm, int64(req.YearOfManufactureRangeFrom))
+		if err != nil {
+			l.Errorf("统计挂单总数失败: %v", err)
+			return err
+		}
+		return nil
+	})
+
+	gOffers.Go(func() error {
+		var err error
+		offersData, err = l.svcCtx.OffersModel.FindByLocationIdAndDirection(gCtxOffers, req.LocationId, dbDirection, dbCategory, dbCondition, dbColor, dbEquipmentType, dbCommercialTerm, int64(req.YearOfManufactureRangeFrom), req.LastId, limit)
+		if err != nil {
+			l.Errorf("查询挂单列表失败: %v", err)
+			return err
+		}
+		return nil
+	})
+
+	if err := gOffers.Wait(); err != nil {
 		return nil, err
 	}
 
