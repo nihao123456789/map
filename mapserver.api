@@ -28,5 +28,9 @@ service mapserver {
 	// 按位置统计交易挂单数量
 	@handler GetTradingLocationCountHandler
 	post /api/tradings/location/count (TradingLocationCountReq) returns (TradingLocationCountResp)
+
+	// 获取地理位置列表 (按使用频率排序)
+	@handler GetLocationListHandler
+	post /api/locations/list returns (LocationListResp)
 }
 

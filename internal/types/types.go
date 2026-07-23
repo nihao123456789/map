@@ -221,3 +221,7 @@ type TradingLocationCountItem struct {
 type TradingLocationCountResp struct {
 	List []TradingLocationCountItem `json:"list"`
 }
+
+type LocationListResp struct {
+	List []LocationInfo `json:"list"`
+}

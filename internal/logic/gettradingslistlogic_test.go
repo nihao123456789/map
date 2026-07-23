@@ -81,6 +81,23 @@ func TestGetTradingLocationCount(t *testing.T) {
 	fmt.Printf("--- 统计接口测试成功，返回数据样例 ---\n%s\n", string(resBytes))
 }
 
+func TestGetLocationList(t *testing.T) {
+	var c config.Config
+	conf.MustLoad("../../etc/mapserver-dev.yaml", &c)
+
+	svcCtx := svc.NewServiceContext(c)
+	l := logic.NewGetLocationListLogic(context.Background(), svcCtx)
+
+	resp, err := l.GetLocationList()
+	if err != nil {
+		t.Fatalf("调用 GetLocationList 报错: %v", err)
+	}
+
+	resBytes, _ := json.MarshalIndent(resp, "", "  ")
+	fmt.Printf("--- 位置列表接口测试成功，返回数据样例 ---\n%s\n", string(resBytes))
+}
+
+
 // TestRunServer 用于在受 Device Guard 限制的机器上，以单元测试的名义直接以白名单方式启动 HTTP 地图服务。
 func TestRunServer(t *testing.T) {
 	// 注册全局错误处理器，将参数校验错误及 Logic 层错误统一输出为友好的 JSON 格式
@@ -133,6 +150,8 @@ func TestRunServer(t *testing.T) {
 	fmt.Printf("【白名单调试模式】地图服务启动成功，监听地址：%s:%d\n", c.Host, c.Port)
 	fmt.Println("接口列表：")
 	fmt.Println("  POST /api/tradings/list - 获取集装箱交易挂单列表（支持去重关联企业信息、会员徽章与地理位置树节点）")
+	fmt.Println("  POST /api/tradings/location/count - 按位置统计交易挂单数量")
+	fmt.Println("  POST /api/locations/list - 获取热门地理位置列表 (按使用频率排序)")
 
 	// 启动 HTTP 服务，阻塞直到收到退出信号
 	server.Start()
@@ -502,6 +521,47 @@ func TestFixSwagger(t *testing.T) {
 				"summary": "按位置统计交易挂单数量",
 			},
 		}
+
+		paths["/api/locations/list"] = map[string]interface{}{
+			"post": map[string]interface{}{
+				"consumes":    "application/json",
+				"description": "获取按使用频率从高到低排序的热门地理位置城市列表",
+				"operationId": "GetLocationList",
+				"parameters": []interface{}{
+					map[string]interface{}{
+						"description": "请求发起时的 Unix 时间戳（秒级）",
+						"in":          "header",
+						"name":        "X-Timestamp",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]interface{}{
+						"description": "请求随机字符串",
+						"in":          "header",
+						"name":        "X-Nonce",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]interface{}{
+						"description": "校验签名",
+						"in":          "header",
+						"name":        "X-Signature",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+				"produces": []interface{}{"application/json"},
+				"responses": map[string]interface{}{
+					"200": map[string]interface{}{
+						"description": "获取成功",
+						"schema": map[string]interface{}{
+							"$ref": "#/definitions/LocationListResp",
+						},
+					},
+				},
+				"summary": "获取热门地理位置列表 (按使用频率排序)",
+			},
+		}
 	}
 
 	// 11. 注入 TradingLocationCountReq, TradingLocationCountItem 和 TradingLocationCountResp 到 definitions
@@ -543,6 +603,20 @@ func TestFixSwagger(t *testing.T) {
 				"description": "按位置统计数量子项列表",
 				"items": map[string]interface{}{
 					"$ref": "#/definitions/TradingLocationCountItem",
+				},
+				"type": "array",
+			},
+		},
+		"required": []interface{}{"list"},
+		"type":     "object",
+	}
+
+	definitions["LocationListResp"] = map[string]interface{}{
+		"properties": map[string]interface{}{
+			"list": map[string]interface{}{
+				"description": "热门位置列表项",
+				"items": map[string]interface{}{
+					"$ref": "#/definitions/LocationInfo",
 				},
 				"type": "array",
 			},

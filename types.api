@@ -224,5 +224,10 @@ type (
 	TradingLocationCountResp {
 		List []TradingLocationCountItem `json:"list"`
 	}
+
+	// LocationListResp 热门地理位置列表响应
+	LocationListResp {
+		List []LocationInfo `json:"list"`
+	}
 )
 

@@ -31,6 +31,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Path:    "/api/tradings/location/count",
 					Handler: GetTradingLocationCountHandler(serverCtx),
 				},
+				{
+					Method:  http.MethodPost,
+					Path:    "/api/locations/list",
+					Handler: GetLocationListHandler(serverCtx),
+				},
 			}...,
 		),
 	)
