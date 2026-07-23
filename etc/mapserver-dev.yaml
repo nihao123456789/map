@@ -25,6 +25,6 @@ PostgreSQL:
 Log:
   Mode: file             # 输出模式：file=落地文件，console=仅控制台
   Path: logs/dev         # 日志文件存储路径
-  Level: info            # 记录等级
+  Level: debug           # 记录等级
   KeepDays: 7            # 历史日志保留天数
   Compress: true         # 历史日志是否压缩成 gzip 包
