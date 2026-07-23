@@ -62,10 +62,10 @@ func (m *customOffersModel) buildWhereAndArgs(locationId int64, direction int64,
 		args = append(args, commercialTerm)
 	}
 
-	// 如果 yearOfManufactureRangeFrom > 0，则追加 year_of_manufacture_range_from 生产年份起步条件进行过滤
+	// 如果 yearOfManufactureRangeFrom > 0，则追加生产年份落入 year_of_manufacture_range_from 与 year_of_manufacture_range_to 区间条件进行过滤
 	if yearOfManufactureRangeFrom > 0 {
-		baseWhere += " and `year_of_manufacture_range_from` >= ?"
-		args = append(args, yearOfManufactureRangeFrom)
+		baseWhere += " and `year_of_manufacture_range_from` <= ? and `year_of_manufacture_range_to` >= ?"
+		args = append(args, yearOfManufactureRangeFrom, yearOfManufactureRangeFrom)
 	}
 
 	return baseWhere, args
