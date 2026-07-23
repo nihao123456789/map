@@ -73,6 +73,9 @@ func main() {
 	// 初始化服务上下文（包含 MySQL、Redis 连接等所有依赖）
 	ctx := svc.NewServiceContext(c)
 
+	// 注册全局运行时 Panic 兜底恢复中间件
+	server.Use(middleware.RecoverMiddleware)
+
 	// 注册全局成功返回包装中间件
 	server.Use(middleware.UniformResponseMiddleware)
 

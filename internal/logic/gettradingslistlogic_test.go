@@ -140,6 +140,9 @@ func TestRunServer(t *testing.T) {
 	// 初始化服务上下文（包含 MySQL、Redis 连接等所有依赖）
 	ctx := svc.NewServiceContext(c)
 
+	// 注册全局运行时 Panic 兜底恢复中间件
+	server.Use(middleware.RecoverMiddleware)
+
 	// 注册全局成功返回包装中间件
 	server.Use(middleware.UniformResponseMiddleware)
 
@@ -639,5 +642,25 @@ func TestFixSwagger(t *testing.T) {
 	}
 
 	t.Log("swagger.json 修正成功！")
+}
+
+func TestPanicRecoverMiddleware(t *testing.T) {
+	testHandler := func(w http.ResponseWriter, r *http.Request) {
+		panic("模拟运行时严重崩溃")
+	}
+
+	req, _ := http.NewRequest("POST", "/api/test/panic", nil)
+	w := httptest.NewRecorder()
+
+	middleware.RecoverMiddleware(testHandler)(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("期望返回状态码 200，实际得到: %d", w.Code)
+	}
+
+	expectedBody := `{"code":500,"msg":"系统繁忙，请稍后再试"}`
+	if w.Body.String() != expectedBody {
+		t.Errorf("期望返回体 %s，实际得到: %s", expectedBody, w.Body.String())
+	}
 }
 
