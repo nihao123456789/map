@@ -16,6 +16,7 @@ import (
 	"map-server/internal/model/mysql/map_server/enums"
 
 	"github.com/zeromicro/go-zero/core/logx"
+	"golang.org/x/sync/errgroup"
 )
 
 // GetTradingsListLogic 负责处理获取交易挂单列表的业务逻辑。
@@ -189,154 +190,188 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		}
 	}
 
-	var companiesMap = make(map[int64]*companies.Companies)
-	var purchasesMap = make(map[int64][]*membershippurchases.MembershipPurchases)
-	var vipPlansMap = make(map[int64]*vipplans.VipPlans)
+	// 使用 errgroup 开启并发查询任务，绑定请求 Context 控制生命周期，规避协程泄露与多表串行慢查询
+	g, gCtx := errgroup.WithContext(l.ctx)
 
+	var (
+		companiesMap       = make(map[int64]*companies.Companies)
+		purchasesMap       = make(map[int64][]*membershippurchases.MembershipPurchases)
+		vipPlansMap        = make(map[int64]*vipplans.VipPlans)
+		depotsMap          = make(map[int64]*depots.Depots)
+		locationsMap       = make(map[int64]*treenodes.TreeNodes)
+		conditionsMap      = make(map[string]*types.EnumInfo)
+		equipmentTypesMap  = make(map[string]*types.EnumInfo)
+		commercialTermsMap = make(map[string]*types.EnumInfo)
+		categoriesMap      = make(map[string]*types.EnumInfo)
+	)
+
+	// 1. 并发拉取企业详细信息、激活会员记录及对应会员套餐配置
 	if len(companyIdsMap) > 0 {
 		companyIds := make([]int64, 0, len(companyIdsMap))
 		for id := range companyIdsMap {
 			companyIds = append(companyIds, id)
 		}
-		// 1. 批量拉取公司详细数据
-		companiesData, err := l.svcCtx.CompaniesModel.FindByIds(l.ctx, companyIds)
-		if err != nil {
-			l.Errorf("批量拉取企业详细信息失败: %v", err)
-			return nil, err
-		}
-		for _, comp := range companiesData {
-			companiesMap[comp.Id] = comp
-		}
-
-		// 2. 批量拉取激活状态的会员购买记录
-		purchasesData, err := l.svcCtx.MembershipPurchasesModel.FindActiveByCompanyIds(l.ctx, companyIds)
-		if err != nil {
-			l.Errorf("批量拉取企业会员购买记录失败: %v", err)
-			return nil, err
-		}
-
-		// 3. 将 purchasesData 按 company_id 划分并收集涉及的 plan_ids
-		vipPlanIdsMap := make(map[int64]struct{})
-		for _, p := range purchasesData {
-			purchasesMap[p.CompanyId] = append(purchasesMap[p.CompanyId], p)
-			vipPlanIdsMap[p.VipPlanId] = struct{}{}
-		}
-
-		// 4. 批量拉取所涉及的 vip_plans 套餐配置
-		if len(vipPlanIdsMap) > 0 {
-			vipPlanIds := make([]int64, 0, len(vipPlanIdsMap))
-			for pid := range vipPlanIdsMap {
-				vipPlanIds = append(vipPlanIds, pid)
-			}
-			plansData, err := l.svcCtx.VipPlansModel.FindByIds(l.ctx, vipPlanIds)
+		g.Go(func() error {
+			// 1.1 批量拉取公司详细数据
+			companiesData, err := l.svcCtx.CompaniesModel.FindByIds(gCtx, companyIds)
 			if err != nil {
-				l.Errorf("批量拉取会员套餐信息失败: %v", err)
-				return nil, err
+				l.Errorf("批量拉取企业详细信息失败: %v", err)
+				return err
 			}
-			for _, plan := range plansData {
-				vipPlansMap[plan.Id] = plan
+			for _, comp := range companiesData {
+				companiesMap[comp.Id] = comp
 			}
-		}
+
+			// 1.2 批量拉取激活状态的会员购买记录
+			purchasesData, err := l.svcCtx.MembershipPurchasesModel.FindActiveByCompanyIds(gCtx, companyIds)
+			if err != nil {
+				l.Errorf("批量拉取企业会员购买记录失败: %v", err)
+				return err
+			}
+
+			// 1.3 将 purchasesData 按 company_id 划分并收集涉及的 plan_ids
+			vipPlanIdsMap := make(map[int64]struct{})
+			for _, p := range purchasesData {
+				purchasesMap[p.CompanyId] = append(purchasesMap[p.CompanyId], p)
+				vipPlanIdsMap[p.VipPlanId] = struct{}{}
+			}
+
+			// 1.4 批量拉取所涉及的 vip_plans 套餐配置
+			if len(vipPlanIdsMap) > 0 {
+				vipPlanIds := make([]int64, 0, len(vipPlanIdsMap))
+				for pid := range vipPlanIdsMap {
+					vipPlanIds = append(vipPlanIds, pid)
+				}
+				plansData, err := l.svcCtx.VipPlansModel.FindByIds(gCtx, vipPlanIds)
+				if err != nil {
+					l.Errorf("批量拉取会员套餐信息失败: %v", err)
+					return err
+				}
+				for _, plan := range plansData {
+					vipPlansMap[plan.Id] = plan
+				}
+			}
+			return nil
+		})
 	}
 
-
-	var depotsMap = make(map[int64]*depots.Depots)
+	// 2. 并发批量拉取堆场详情数据
 	if len(depotIdsMap) > 0 {
 		depotIds := make([]int64, 0, len(depotIdsMap))
 		for id := range depotIdsMap {
 			depotIds = append(depotIds, id)
 		}
-		// 批量拉取堆场数据
-		depotsData, err := l.svcCtx.DepotsModel.FindByIds(l.ctx, depotIds)
-		if err != nil {
-			l.Errorf("批量拉取堆场详细信息失败: %v", err)
-			return nil, err
-		}
-		for _, dep := range depotsData {
-			depotsMap[dep.Id] = dep
-		}
+		g.Go(func() error {
+			depotsData, err := l.svcCtx.DepotsModel.FindByIds(gCtx, depotIds)
+			if err != nil {
+				l.Errorf("批量拉取堆场详细信息失败: %v", err)
+				return err
+			}
+			for _, dep := range depotsData {
+				depotsMap[dep.Id] = dep
+			}
+			return nil
+		})
 	}
 
-
-	var locationsMap = make(map[int64]*treenodes.TreeNodes)
+	// 3. 并发批量拉取地理位置树节点详情数据
 	if len(locationIdsMap) > 0 {
 		locationIds := make([]int64, 0, len(locationIdsMap))
 		for id := range locationIdsMap {
 			locationIds = append(locationIds, id)
 		}
-		locationsData, err := l.svcCtx.TreeNodesModel.FindByIds(l.ctx, locationIds)
-		if err != nil {
-			l.Errorf("批量拉取地理位置树节点信息失败: %v", err)
-			return nil, err
-		}
-		for _, node := range locationsData {
-			locationsMap[node.Id] = node
-		}
+		g.Go(func() error {
+			locationsData, err := l.svcCtx.TreeNodesModel.FindByIds(gCtx, locationIds)
+			if err != nil {
+				l.Errorf("批量拉取地理位置树节点信息失败: %v", err)
+				return err
+			}
+			for _, node := range locationsData {
+				locationsMap[node.Id] = node
+			}
+			return nil
+		})
 	}
 
-
-	var conditionsMap = make(map[string]*types.EnumInfo)
+	// 4. 并发批量拉取箱况字典项详情
 	if len(conditionIdsMap) > 0 {
 		conditionIds := make([]string, 0, len(conditionIdsMap))
 		for id := range conditionIdsMap {
 			conditionIds = append(conditionIds, id)
 		}
-		enumsData, err := l.svcCtx.EnumsModel.FindByCategoryAndItemIds(l.ctx, enums.CategoryConditions, conditionIds)
-		if err != nil {
-			l.Errorf("批量拉取箱况字典数据失败: %v", err)
-			return nil, err
-		}
-		for _, val := range enumsData {
-			conditionsMap[val.ItemId] = toEnumInfo(val)
-		}
+		g.Go(func() error {
+			enumsData, err := l.svcCtx.EnumsModel.FindByCategoryAndItemIds(gCtx, enums.CategoryConditions, conditionIds)
+			if err != nil {
+				l.Errorf("批量拉取箱况字典数据失败: %v", err)
+				return err
+			}
+			for _, val := range enumsData {
+				conditionsMap[val.ItemId] = toEnumInfo(val)
+			}
+			return nil
+		})
 	}
 
-	var equipmentTypesMap = make(map[string]*types.EnumInfo)
+	// 5. 并发批量拉取箱型规格字典项详情
 	if len(equipmentTypeIdsMap) > 0 {
 		equipmentTypeIds := make([]string, 0, len(equipmentTypeIdsMap))
 		for id := range equipmentTypeIdsMap {
 			equipmentTypeIds = append(equipmentTypeIds, id)
 		}
-		enumsData, err := l.svcCtx.EnumsModel.FindByCategoryAndItemIds(l.ctx, enums.CategoryEquipmentTypes, equipmentTypeIds)
-		if err != nil {
-			l.Errorf("批量拉取箱型字典数据失败: %v", err)
-			return nil, err
-		}
-		for _, val := range enumsData {
-			equipmentTypesMap[val.ItemId] = toEnumInfo(val)
-		}
+		g.Go(func() error {
+			enumsData, err := l.svcCtx.EnumsModel.FindByCategoryAndItemIds(gCtx, enums.CategoryEquipmentTypes, equipmentTypeIds)
+			if err != nil {
+				l.Errorf("批量拉取箱型字典数据失败: %v", err)
+				return err
+			}
+			for _, val := range enumsData {
+				equipmentTypesMap[val.ItemId] = toEnumInfo(val)
+			}
+			return nil
+		})
 	}
 
-	var commercialTermsMap = make(map[string]*types.EnumInfo)
+	// 6. 并发批量拉取提箱方式字典项详情
 	if len(commercialTermIdsMap) > 0 {
 		commercialTermIds := make([]string, 0, len(commercialTermIdsMap))
 		for id := range commercialTermIdsMap {
 			commercialTermIds = append(commercialTermIds, id)
 		}
-		enumsData, err := l.svcCtx.EnumsModel.FindByCategoryAndItemIds(l.ctx, enums.CategoryCommercialTerm, commercialTermIds)
-		if err != nil {
-			l.Errorf("批量拉取贸易条款字典数据失败: %v", err)
-			return nil, err
-		}
-		for _, val := range enumsData {
-			commercialTermsMap[val.ItemId] = toEnumInfo(val)
-		}
+		g.Go(func() error {
+			enumsData, err := l.svcCtx.EnumsModel.FindByCategoryAndItemIds(gCtx, enums.CategoryCommercialTerm, commercialTermIds)
+			if err != nil {
+				l.Errorf("批量拉取贸易条款字典数据失败: %v", err)
+				return err
+			}
+			for _, val := range enumsData {
+				commercialTermsMap[val.ItemId] = toEnumInfo(val)
+			}
+			return nil
+		})
 	}
 
-	var categoriesMap = make(map[string]*types.EnumInfo)
+	// 7. 并发批量拉取箱型大类字典项详情
 	if len(categoryIdsMap) > 0 {
 		categoryIds := make([]string, 0, len(categoryIdsMap))
 		for id := range categoryIdsMap {
 			categoryIds = append(categoryIds, id)
 		}
-		enumsData, err := l.svcCtx.EnumsModel.FindByCategoryAndItemIds(l.ctx, enums.CategoryContainerCategory, categoryIds)
-		if err != nil {
-			l.Errorf("批量拉取箱型分类字典数据失败: %v", err)
-			return nil, err
-		}
-		for _, val := range enumsData {
-			categoriesMap[val.ItemId] = toEnumInfo(val)
-		}
+		g.Go(func() error {
+			enumsData, err := l.svcCtx.EnumsModel.FindByCategoryAndItemIds(gCtx, enums.CategoryContainerCategory, categoryIds)
+			if err != nil {
+				l.Errorf("批量拉取箱型分类字典数据失败: %v", err)
+				return err
+			}
+			for _, val := range enumsData {
+				categoriesMap[val.ItemId] = toEnumInfo(val)
+			}
+			return nil
+		})
+	}
+
+	// 等待所有并发协程完成，如果任何协程返回错误，则在这里被捕捉并返回
+	if err := g.Wait(); err != nil {
+		return nil, err
 	}
 
 	// 转换为 API 响应所定义的 OfferInfo 列表，采用容量预分配降低 GC 压力
