@@ -73,6 +73,10 @@ func (m *customOffersModel) buildWhereAndArgs(locationId int64, direction int64,
 
 // FindByLocationIdAndDirection 根据位置ID和交易方向查询有效的买卖交易挂单列表（状态为启用且未过期，且未被逻辑删除的数据）。
 // 支持游标分页：如果传入 lastId > 0，则只获取排序在该记录之后的挂单数据。
+// 【未来高并发大数据量性能调优预案】：
+// 当 `offers` 表数据量达到数百万、千万量级，为保障多条件过滤及游标排序的高效响应，建议在数据库端执行以下 DDL 创建联合索引：
+// DDL 命令：ALTER TABLE `offers` ADD INDEX `idx_offers_list_cursor` (`location_id`, `direction`, `type`, `status`, `is_expired`, `bumped_at`, `id`);
+// 说明：此索引能完美覆盖 WHERE 核心过滤条件与 ORDER BY 的游标联合排序，使分页扫描开销稳定保持在毫秒级。
 func (m *customOffersModel) FindByLocationIdAndDirection(ctx context.Context, locationId int64, direction int64, category int64, condition int64, color string, equipmentType int64, commercialTerm int64, yearOfManufactureRangeFrom int64, lastId int64, limit int64) ([]*Offers, error) {
 	baseWhere, args := m.buildWhereAndArgs(locationId, direction, category, condition, color, equipmentType, commercialTerm, yearOfManufactureRangeFrom)
 
