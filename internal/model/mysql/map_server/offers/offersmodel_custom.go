@@ -113,6 +113,11 @@ func (m *customOffersModel) CountByLocationIdAndDirection(ctx context.Context, l
 }
 
 // FindCountGroupByLocationId 根据交易方向按位置ID分组统计有效的买卖交易挂单数量
+// 【未来高并发大数据量性能调优预案】：
+// 目前数据规模下使用基础索引即可秒级返回。若未来挂单数据量级达到数百万甚至千万级别，
+// 为了避免大量回表或临时表排序，建议在数据库中为 `offers` 表创建以下联合覆盖索引（Covering Index）：
+// DDL 命令：ALTER TABLE `offers` ADD INDEX `idx_trading_location_count` (`type`, `direction`, `status`, `is_expired`, `location_id`);
+// 一旦建立该索引，本查询将被数据库优化器直接识别为 "Using index"（覆盖索引），完全在索引树中完成快速过滤与分组聚合，实现毫秒级极致响应。
 func (m *customOffersModel) FindCountGroupByLocationId(ctx context.Context, direction int64) ([]*LocationCountResult, error) {
 	// 基础条件拼接，固定过滤 Trading 挂单、对应方向、已发布 (status=10)、且未过期 (is_expired=0) 并过滤物理删除
 	query := fmt.Sprintf(
