@@ -7,6 +7,7 @@ import (
 
 	"map-server/internal/svc"
 	"map-server/internal/types"
+	"map-server/internal/consts"
 	"map-server/internal/model/mysql/map_server/offers"
 	"map-server/internal/model/mysql/map_server/companies"
 	"map-server/internal/model/mysql/map_server/vipplans"
@@ -207,9 +208,9 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 	// 游标分页限制机制，防范海量数据查询导致内存溢出 (OOM) 与 GC 压力
 	limit := req.PageSize
 	if limit <= 0 {
-		limit = 10 // 默认每页10条
-	} else if limit > 100 {
-		limit = 100 // 最大限制单页100条
+		limit = consts.DefaultPageSize
+	} else if limit > consts.MaxPageSize {
+		limit = consts.MaxPageSize
 	}
 
 	var (

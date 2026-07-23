@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"map-server/internal/consts"
 )
 
 // SignatureMiddleware 是签名验证中间件结构体
@@ -45,7 +47,7 @@ func (m *SignatureMiddleware) Handle(next http.HandlerFunc) http.HandlerFunc {
 		// 防重放攻击校验：请求发起时间与当前时间差不得超过 300 秒 (5分钟)
 		now := time.Now().Unix()
 		diff := now - timestamp
-		if diff < -300 || diff > 300 {
+		if diff < -consts.SignatureTimeDiffLimit || diff > consts.SignatureTimeDiffLimit {
 			m.writeError(w, "请求已过期（防重放）")
 			return
 		}

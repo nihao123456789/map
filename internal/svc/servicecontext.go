@@ -8,7 +8,6 @@ package svc
 
 import (
 	"fmt"
-	"time"
 
 	"golang.org/x/time/rate"
 
@@ -18,6 +17,7 @@ import (
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 
 	"map-server/internal/config"
+	"map-server/internal/consts"
 	"map-server/internal/middleware"
 	mysqlModel "map-server/internal/model/mysql/map_server"
 	"map-server/internal/model/mysql/map_server/offers"
@@ -105,9 +105,9 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	db := sqlx.NewMysql(c.MySQL.DataSource)
 	// 并发架构优化：为底层连接池配置最大打开连接数与空闲数，提升连接的复用与生命周期管理
 	if rawDB, err := db.RawDB(); err == nil && rawDB != nil {
-		rawDB.SetMaxOpenConns(150)           // 最大连接数
-		rawDB.SetMaxIdleConns(50)            // 最大空闲数
-		rawDB.SetConnMaxLifetime(time.Hour)  // 连接最大生命周期，防止长连接失效
+		rawDB.SetMaxOpenConns(consts.DBMaxOpenConns)
+		rawDB.SetMaxIdleConns(consts.DBMaxIdleConns)
+		rawDB.SetConnMaxLifetime(consts.DBConnMaxLifetime)
 	}
 	fmt.Println("MySQL/MariaDB 连接初始化完成")
 
@@ -143,7 +143,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	postGISYardModel := postgisModel.NewPostGISYardModel(pgPool)
 	postGISContainerModel := postgisModel.NewPostGISContainerModel(pgPool)
 
-	enumsCache, err := collection.NewCache(5*time.Minute, collection.WithLimit(1000))
+	enumsCache, err := collection.NewCache(consts.EnumsCacheTTL, collection.WithLimit(consts.EnumsCacheLimit))
 	if err != nil {
 		panic(fmt.Sprintf("创建字典内存缓存失败: %v", err))
 	}
