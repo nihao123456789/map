@@ -128,9 +128,8 @@ type (
 		EnglishName string  `json:"english_name"`
 		Lat         float32 `json:"lat"`
 		Lng         float32 `json:"lng"`
-		// Level       int32   `json:"level"`
-		// FullName    string  `json:"full_name"`
-		// FullNameCn  string  `json:"full_name_cn"`
+		FullName    string  `json:"full_name"`
+		FullNameCn  string  `json:"full_name_cn"`
 	}
 
 	// DepotInfo 堆场详细信息
@@ -140,15 +139,15 @@ type (
 		// PostalCode   string  `json:"postal_code"`
 		// Website      string  `json:"website"`
 		// PhoneNumber  string  `json:"phone_number"`
-		// City         string  `json:"city"`
-		// Country      string  `json:"country"`
+		City         string  `json:"city"`
+		Country      string  `json:"country"`
 		// ContactName  string  `json:"contact_name"`
 		// Email        string  `json:"email"`
 		LocationId   int64   `json:"location_id"`
 		// LocalName    string  `json:"local_name"`
 		// LocalAddress string  `json:"local_address"`
-		// AddressLine1 string  `json:"address_line1"`
-		// AddressLine2 string  `json:"address_line2"`
+		AddressLine1 string  `json:"address_line1"`
+		AddressLine2 string  `json:"address_line2"`
 		Lat          float32 `json:"lat"`
 		Lng          float32 `json:"lng"`
 	}

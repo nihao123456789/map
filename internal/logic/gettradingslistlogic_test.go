@@ -260,16 +260,14 @@ func TestFixSwagger(t *testing.T) {
 			delete(props, "postalcode")
 			delete(props, "website")
 			delete(props, "phonenumber")
-			delete(props, "city")
-			delete(props, "country")
 			delete(props, "contactname")
 			delete(props, "email")
 			delete(props, "localname")
 			delete(props, "localaddress")
-			delete(props, "addressline1")
-			delete(props, "addressline2")
 
 			renameProp(props, "locationid", "location_id")
+			renameProp(props, "addressline1", "address_line1")
+			renameProp(props, "addressline2", "address_line2")
 		}
 	}
 
@@ -277,10 +275,10 @@ func TestFixSwagger(t *testing.T) {
 	if locInfo, exists := definitions["LocationInfo"].(map[string]interface{}); exists {
 		if props, ok := locInfo["properties"].(map[string]interface{}); ok {
 			delete(props, "level")
-			delete(props, "fullname")
-			delete(props, "fullnamecn")
 			
 			renameProp(props, "englishname", "english_name")
+			renameProp(props, "fullname", "full_name")
+			renameProp(props, "fullnamecn", "full_name_cn")
 		}
 	}
 

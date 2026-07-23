@@ -559,15 +559,15 @@ func toDepotInfo(item *depots.Depots) *types.DepotInfo {
 		// PostalCode:   item.PostalCode.String,
 		// Website:      item.Website.String,
 		// PhoneNumber:  item.PhoneNumber.String,
-		// City:         item.City.String,
-		// Country:      item.Country.String,
+		City:         item.City.String,
+		Country:      item.Country.String,
 		// ContactName:  item.ContactName.String,
 		// Email:        item.Email.String,
 		LocationId:   item.LocationId.Int64,
 		// LocalName:    item.LocalName.String,
 		// LocalAddress: item.LocalAddress.String,
-		// AddressLine1: item.AddressLine1.String,
-		// AddressLine2: item.AddressLine2.String,
+		AddressLine1: item.AddressLine1.String,
+		AddressLine2: item.AddressLine2.String,
 		Lat:          float32(item.Lat.Float64),
 		Lng:          float32(item.Lng.Float64),
 	}
@@ -585,9 +585,8 @@ func toLocationInfo(item *treenodes.TreeNodes) *types.LocationInfo {
 		EnglishName: item.EnglishName.String,
 		Lat:         float32(item.Lat.Float64),
 		Lng:         float32(item.Lng.Float64),
-		// Level:       int32(item.Level),
-		// FullName:    item.FullName.String,
-		// FullNameCn:  item.FullNameCn.String,
+		FullName:    item.FullName.String,
+		FullNameCn:  item.FullNameCn.String,
 	}
 }
 
