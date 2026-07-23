@@ -7,12 +7,6 @@ SignatureSecret: "MapServerSecretKey2026"
 # MySQL 数据库配置（生产环境业务数据存储）
 MySQL:
   DataSource: "go_readonly:HAIwaitan13!@tcp(172.22.164.13:3306)/container_house_production?charset=utf8mb4&parseTime=true&loc=UTC&timeout=5s&readTimeout=10s&writeTimeout=10s"
-# PostgreSQL+PostGIS 配置（生产环境精确空间查询）
-# 连接字符串格式：host=主机 port=端口 user=用户名 password=密码 dbname=数据库名 sslmode=disable
-PostgreSQL:
-  DataSource: "host=prod-pgsql-host port=5432 user=prod_user password=ProdPassword dbname=map_server_prod sslmode=disable"
-  # 连接池最大连接数（生产环境并发量高，连接池调大）
-  MaxConns: 100
 
 # 日志配置（生产环境）
 Log:

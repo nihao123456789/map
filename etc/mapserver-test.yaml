@@ -7,12 +7,6 @@ SignatureSecret: "MapServerSecretKey2026"
 # MySQL 数据库配置（测试环境业务数据存储）
 MySQL:
   DataSource: "test_user:TestPassword@tcp(127.0.0.1:3306)/map_server_test?charset=utf8mb4&parseTime=true&loc=UTC&timeout=5s&readTimeout=10s&writeTimeout=10s"
-# PostgreSQL+PostGIS 配置（测试环境精确空间查询）
-# 连接字符串格式：host=主机 port=端口 user=用户名 password=密码 dbname=数据库名 sslmode=disable
-PostgreSQL:
-  DataSource: "host=127.0.0.1 port=5432 user=test_user password=TestPassword dbname=map_server_test sslmode=disable"
-  # 连接池最大连接数
-  MaxConns: 20
 
 # 日志配置（测试环境）
 Log:

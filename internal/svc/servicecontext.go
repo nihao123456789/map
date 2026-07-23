@@ -11,7 +11,6 @@ import (
 
 	"golang.org/x/time/rate"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/zeromicro/go-zero/core/collection"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 
@@ -26,7 +25,6 @@ import (
 	"map-server/internal/model/mysql/map_server/depots"
 	"map-server/internal/model/mysql/map_server/treenodes"
 	"map-server/internal/model/mysql/map_server/enums"
-	postgisModel "map-server/internal/model/postgis/map_server"
 
 	"github.com/zeromicro/go-zero/rest"
 )
@@ -65,17 +63,6 @@ type ServiceContext struct {
 
 	// EnumsModel 提供 MySQL 数据字典表的访问
 	EnumsModel enums.EnumsModel
-
-	// ==================== PostgreSQL + PostGIS 相关 ====================
-
-	// PgPool 是 pgx/v5 的 PostgreSQL 连接池，线程安全，支持高并发
-	PgPool *pgxpool.Pool
-
-	// PostGISYardModel 提供 PostgreSQL 堆场空间查询（BBox/Radius）
-	PostGISYardModel *postgisModel.PostGISYardModel
-
-	// PostGISContainerModel 提供 PostgreSQL 集装箱空间查询（BBox/Radius）
-	PostGISContainerModel *postgisModel.PostGISContainerModel
 
 	// SignatureMiddleware 签名校验路由中间件
 	SignatureMiddleware rest.Middleware
@@ -120,19 +107,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	treenodesModel := treenodes.NewTreeNodesModel(db)
 	enumsModel := enums.NewEnumsModel(db)
 
-	// -----------------------------------------------------------
-	// 初始化 PostgreSQL 连接池（pgxpool）
-	// 注意：当前项目版本暂未使用 PostgreSQL 与 PostGIS，因此跳过 PostgreSQL 连接初始化。
-	// -----------------------------------------------------------
-	var pgPool *pgxpool.Pool = nil
-	fmt.Println("跳过 PostgreSQL 连接初始化（当前项目未使用 PostgreSQL）")
-
-	// -----------------------------------------------------------
-	// 初始化 PostGIS Model
-	// -----------------------------------------------------------
-	postGISYardModel := postgisModel.NewPostGISYardModel(pgPool)
-	postGISContainerModel := postgisModel.NewPostGISContainerModel(pgPool)
-
 	enumsCache, err := collection.NewCache(consts.EnumsCacheTTL, collection.WithLimit(consts.EnumsCacheLimit))
 	if err != nil {
 		panic(fmt.Sprintf("创建字典内存缓存失败: %v", err))
@@ -141,9 +115,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	return &ServiceContext{
 		Config:                c,
 		DB:                    db,
-		PgPool:                pgPool,
-		PostGISYardModel:      postGISYardModel,
-		PostGISContainerModel: postGISContainerModel,
 		SyncFailureLogModel:   syncFailureLogModel,
 		OffersModel:              offersModel,
 		CompaniesModel:           companiesModel,
@@ -161,9 +132,4 @@ func NewServiceContext(c config.Config) *ServiceContext {
 // Shutdown 优雅关闭服务上下文中所有的长连接资源。
 func (sc *ServiceContext) Shutdown() {
 	fmt.Println("正在释放服务上下文的连接资源...")
-	// 1. 关闭 PostgreSQL+PostGIS 连接池
-	if sc.PgPool != nil {
-		sc.PgPool.Close()
-		fmt.Println("PostgreSQL 连接池已安全关闭")
-	}
 }
