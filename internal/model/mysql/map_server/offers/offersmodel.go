@@ -14,9 +14,9 @@ type (
 		offersModel
 		withSession(session sqlx.Session) OffersModel
 		// FindByLocationIdAndDirection 根据位置ID、交易方向、箱型分类、箱况、颜色、规格箱型、提箱方式和生产年份起步查询买卖交易挂单列表（支持游标分页）
-		FindByLocationIdAndDirection(ctx context.Context, locationId int64, direction int64, category int64, condition int64, color int64, equipmentType int64, commercialTerm int64, yearOfManufactureRangeFrom int64, lastId int64, limit int64) ([]*Offers, error)
+		FindByLocationIdAndDirection(ctx context.Context, locationId int64, direction int64, category int64, condition int64, color string, equipmentType int64, commercialTerm int64, yearOfManufactureRangeFrom int64, lastId int64, limit int64) ([]*Offers, error)
 		// CountByLocationIdAndDirection 根据位置ID、交易方向、箱型分类、箱况、颜色、规格箱型、提箱方式和生产年份起步统计符合条件的交易挂单总数
-		CountByLocationIdAndDirection(ctx context.Context, locationId int64, direction int64, category int64, condition int64, color int64, equipmentType int64, commercialTerm int64, yearOfManufactureRangeFrom int64) (int64, error)
+		CountByLocationIdAndDirection(ctx context.Context, locationId int64, direction int64, category int64, condition int64, color string, equipmentType int64, commercialTerm int64, yearOfManufactureRangeFrom int64) (int64, error)
 	}
 
 	customOffersModel struct {

@@ -128,25 +128,8 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		dbCommercialTerm = 0
 	}
 
-	// 解析 color 颜色：通过 EnumsModel 从 enums 数据表中根据 category = enums.CategoryColors 和 value 动态获取 item_id 的值
-	// 1.0的接口参数传的值为 enums 数据表中 extra 字段下的 number 的值
-	var colorItemIDStr string = "0"
-	if len(req.Color) > 0 {
-		enumColor, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(l.ctx, enums.CategoryColors, req.Color)
-		if err != nil {
-			if err != enums.ErrNotFound {
-				l.Errorf("从 enums 数据表获取颜色失败: value=%s, err=%v", req.Color, err)
-				return nil, err
-			}
-		} else {
-			colorItemIDStr = enumColor.ItemId
-		}
-	}
-
-	dbColor, err := strconv.ParseInt(colorItemIDStr, 10, 64)
-	if err != nil {
-		dbColor = 0
-	}
+	// 解析 color 颜色参数：直接使用传入的颜色标识（如 "RAL 1015"），供底层 colors 字段的模糊匹配使用
+	dbColor := req.Color
 
 
 
