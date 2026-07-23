@@ -23,8 +23,8 @@ type Config struct {
 
 	// RateLimit 限流配置 (单机令牌桶防爆流)
 	RateLimit struct {
-		Limit float64 `json:",default=100"` // 每秒允许的请求数 (QPS)
-		Burst int     `json:",default=20"`  // 允许的最大突发请求量 (Burst)
+		Limit float64 `json:"Limit"` // 每秒允许的请求数 (QPS)
+		Burst int     `json:"Burst"` // 允许的最大突发请求量 (Burst)
 	}
 }
 

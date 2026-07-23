@@ -23,4 +23,9 @@ const (
 	DefaultPageSize = 10
 	// MaxPageSize 单页最大数据量限制 (100条)
 	MaxPageSize = 100
+
+	// DefaultRateLimitQPS 默认每秒限流请求数 (100.0)
+	DefaultRateLimitQPS = 100.0
+	// DefaultRateLimitBurst 默认限流突发桶容量上限 (20)
+	DefaultRateLimitBurst = 20
 )

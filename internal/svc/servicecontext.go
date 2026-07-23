@@ -124,7 +124,17 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		TreeNodesModel:           treenodesModel,
 		EnumsModel:               enumsModel,
 		SignatureMiddleware:      middleware.NewSignatureMiddleware(c.SignatureSecret).Handle,
-		RateLimiter:              rate.NewLimiter(rate.Limit(c.RateLimit.Limit), c.RateLimit.Burst),
+		RateLimiter:              func() *rate.Limiter {
+			limit := c.RateLimit.Limit
+			if limit <= 0 {
+				limit = consts.DefaultRateLimitQPS
+			}
+			burst := c.RateLimit.Burst
+			if burst <= 0 {
+				burst = consts.DefaultRateLimitBurst
+			}
+			return rate.NewLimiter(rate.Limit(limit), burst)
+		}(),
 		EnumsCache:               enumsCache,
 	}
 }
