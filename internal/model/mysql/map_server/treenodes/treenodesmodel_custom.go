@@ -39,7 +39,7 @@ func (m *customTreeNodesModel) FindByIds(ctx context.Context, ids []int64) ([]*T
 // FindLocationsOrderByUsage 查询热门地理位置列表，按 usage_count 降序排列
 func (m *customTreeNodesModel) FindLocationsOrderByUsage(ctx context.Context) ([]*TreeNodes, error) {
 	query := fmt.Sprintf(
-		"select %s from %s where `type` = 'location' and `ancestry_depth` > 0 order by `usage_count` desc",
+		"select %s from %s order by `usage_count` desc",
 		treeNodesRowsCustom,
 		m.table,
 	)

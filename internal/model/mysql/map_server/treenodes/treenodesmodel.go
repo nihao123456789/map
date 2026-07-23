@@ -16,7 +16,7 @@ type (
 		withSession(session sqlx.Session) TreeNodesModel
 		// FindByIds 批量查询地理位置树节点详细信息
 		FindByIds(ctx context.Context, ids []int64) ([]*TreeNodes, error)
-		// FindLocationsOrderByUsage 查询热门地理位置列表，按 usage_count 降序排列
+		// FindLocationsOrderByUsage 查询所有地理树节点列表，按 usage_count 降序排列
 		FindLocationsOrderByUsage(ctx context.Context) ([]*TreeNodes, error)
 	}
 
