@@ -16,7 +16,7 @@ const (
 	// CategoryEquipmentTypes 代表箱型规格的枚举分类
 	CategoryEquipmentTypes = "equipmentTypes"
 
-	// CategoryCommercialTerm 代表提箱贸易条款的枚举分类
+	// CategoryCommercialTerm 代表提箱方式的枚举分类
 	CategoryCommercialTerm = "commercialTerm"
 
 	// CategoryColors 代表颜色的枚举分类
