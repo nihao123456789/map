@@ -34,4 +34,7 @@ const (
 
 	// MaxLocationIdsLimit 单次查询支持过滤的最大位置 ID 数量上限 (100个)
 	MaxLocationIdsLimit = 100
+
+	// MaxEnumsCategoriesLimit 批量拉取数据字典的最大分类数量上限 (20个)
+	MaxEnumsCategoriesLimit = 20
 )

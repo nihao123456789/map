@@ -109,6 +109,31 @@ func TestGetTradingLocationCount(t *testing.T) {
 	fmt.Printf("--- 统计接口测试成功，返回数据样例 ---\n%s\n", string(resBytes))
 }
 
+func TestGetEnumsBatch_Limit(t *testing.T) {
+	var c config.Config
+	conf.MustLoad("../../etc/mapserver-dev.yaml", &c)
+
+	svcCtx := svc.NewServiceContext(c)
+	l := logic.NewGetEnumsBatchLogic(context.Background(), svcCtx)
+
+	// 构造 21 个字典分类以触发超限校验
+	tooManyCats := make([]string, 21)
+	for i := 0; i < 21; i++ {
+		tooManyCats[i] = fmt.Sprintf("category_%d", i)
+	}
+
+	req := &types.EnumsBatchReq{
+		Categories: tooManyCats,
+	}
+
+	_, err := l.GetEnumsBatch(req)
+	if err == nil {
+		t.Fatal("期望批量拉取字典数量超限报错，但实际没有报错")
+	}
+
+	fmt.Printf("--- 字典批量拉取超限测试成功，捕获到预期错误: %v ---\n", err)
+}
+
 func TestGetLocationList(t *testing.T) {
 	var c config.Config
 	conf.MustLoad("../../etc/mapserver-dev.yaml", &c)
@@ -294,6 +319,50 @@ func TestFixSwagger(t *testing.T) {
 		}
 	}
 
+	syncRequired := func(def map[string]interface{}) {
+		props, okProps := def["properties"].(map[string]interface{})
+		if !okProps {
+			return
+		}
+		required, okReq := def["required"].([]interface{})
+		if !okReq {
+			return
+		}
+		newRequired := make([]interface{}, 0, len(required))
+		for _, r := range required {
+			rStr, ok := r.(string)
+			if !ok {
+				continue
+			}
+			switch rStr {
+			case "locationid":
+				rStr = "location_id"
+			case "membershipbadges":
+				rStr = "membership_badges"
+			case "reviewlevel":
+				rStr = "review_level"
+			case "addressline1":
+				rStr = "address_line1"
+			case "addressline2":
+				rStr = "address_line2"
+			case "englishname":
+				rStr = "english_name"
+			case "fullname":
+				rStr = "full_name"
+			case "fullnamecn":
+				rStr = "full_name_cn"
+			}
+			if _, exists := props[rStr]; exists {
+				newRequired = append(newRequired, rStr)
+			}
+		}
+		if len(newRequired) > 0 {
+			def["required"] = newRequired
+		} else {
+			delete(def, "required")
+		}
+	}
+
 	if tradingData, exists := definitions["TradingData"].(map[string]interface{}); exists {
 		if props, ok := tradingData["properties"].(map[string]interface{}); ok {
 			renameProp(props, "lastid", "last_id")
@@ -307,6 +376,33 @@ func TestFixSwagger(t *testing.T) {
 				if v == "pagesize" {
 					req[i] = "page_size"
 				}
+			}
+		}
+	}
+
+	// 3.1 修改 TradingListReq 字段（将各种拼写不一致及缩略词修改为蛇形命名，且将 locationid 改为 location_ids 数组）
+	if reqData, exists := definitions["TradingListReq"].(map[string]interface{}); exists {
+		if props, ok := reqData["properties"].(map[string]interface{}); ok {
+			renameProp(props, "commercialterm", "commercial_term")
+			renameProp(props, "equipmenttype", "equipment_type")
+			renameProp(props, "lastid", "last_id")
+			renameProp(props, "pagesize", "page_size")
+			renameProp(props, "yearofmanufacturerangefrom", "year_of_manufacture_range_from")
+
+			// 将 locationid 变更为 location_ids 数组
+			if locIdProp, ok := props["locationid"]; ok {
+				locIdMap, isMap := locIdProp.(map[string]interface{})
+				if isMap {
+					locIdMap["type"] = "array"
+					locIdMap["items"] = map[string]interface{}{
+						"type":   "integer",
+						"format": "int64",
+					}
+					delete(locIdMap, "format")
+					locIdMap["description"] = "目标堆场/城市的位置 ID 列表（可选，若缺省则查询所有位置下的挂单）"
+				}
+				props["location_ids"] = locIdProp
+				delete(props, "locationid")
 			}
 		}
 	}
@@ -595,7 +691,45 @@ func TestFixSwagger(t *testing.T) {
 		}
 	}
 
-	// 11. 注入 TradingLocationCountReq, TradingLocationCountItem 和 TradingLocationCountResp 到 definitions
+	// 10.2 特殊处理 EnumsBatchResp：转换成和 Go struct 对应的 EnumsBatchData (带 enums 字段) 并注入包裹层
+	if enumsResp, exists := definitions["EnumsBatchResp"].(map[string]interface{}); exists {
+		definitions["EnumsBatchData"] = map[string]interface{}{
+			"properties": map[string]interface{}{
+				"enums": map[string]interface{}{
+					"additionalProperties": enumsResp["additionalProperties"],
+					"description":          "按分类分组的字典结果集映射",
+					"type":                 "object",
+				},
+			},
+			"required": []interface{}{"enums"},
+			"type":     "object",
+		}
+		definitions["EnumsBatchResp"] = map[string]interface{}{
+			"properties": map[string]interface{}{
+				"code": map[string]interface{}{
+					"description": "状态码，200 代表成功，非 200 代表各类业务/参数错误",
+					"format":      "int64",
+					"type":        "integer",
+				},
+				"data": map[string]interface{}{
+					"$ref":        "#/definitions/EnumsBatchData",
+					"description": "字典结果集内容",
+				},
+				"msg": map[string]interface{}{
+					"description": "错误描述，成功时为空",
+					"type":        "string",
+				},
+				"trace": map[string]interface{}{
+					"description": "系统追踪唯一链路 ID",
+					"type":        "string",
+				},
+			},
+			"required": []interface{}{"code", "msg", "trace", "data"},
+			"type":     "object",
+		}
+	}
+
+	// 11. 注入 TradingLocationCountReq, TradingLocationCountItem, TradingLocationCountData, TradingLocationCountResp 到 definitions
 	definitions["TradingLocationCountReq"] = map[string]interface{}{
 		"properties": map[string]interface{}{
 			"direction": map[string]interface{}{
@@ -628,7 +762,7 @@ func TestFixSwagger(t *testing.T) {
 		"type":     "object",
 	}
 
-	definitions["TradingLocationCountResp"] = map[string]interface{}{
+	definitions["TradingLocationCountData"] = map[string]interface{}{
 		"properties": map[string]interface{}{
 			"list": map[string]interface{}{
 				"description": "按位置统计数量子项列表",
@@ -642,7 +776,31 @@ func TestFixSwagger(t *testing.T) {
 		"type":     "object",
 	}
 
-	definitions["LocationListResp"] = map[string]interface{}{
+	definitions["TradingLocationCountResp"] = map[string]interface{}{
+		"properties": map[string]interface{}{
+			"code": map[string]interface{}{
+				"description": "状态码，200 代表成功，非 200 代表各类业务/参数错误",
+				"format":      "int64",
+				"type":        "integer",
+			},
+			"data": map[string]interface{}{
+				"$ref":        "#/definitions/TradingLocationCountData",
+				"description": "按位置统计数量数据内容",
+			},
+			"msg": map[string]interface{}{
+				"description": "错误描述，成功时为空",
+				"type":        "string",
+			},
+			"trace": map[string]interface{}{
+				"description": "系统追踪唯一链路 ID",
+				"type":        "string",
+			},
+		},
+		"required": []interface{}{"code", "msg", "trace", "data"},
+		"type":     "object",
+	}
+
+	definitions["LocationListData"] = map[string]interface{}{
 		"properties": map[string]interface{}{
 			"list": map[string]interface{}{
 				"description": "热门位置列表项",
@@ -654,6 +812,37 @@ func TestFixSwagger(t *testing.T) {
 		},
 		"required": []interface{}{"list"},
 		"type":     "object",
+	}
+
+	definitions["LocationListResp"] = map[string]interface{}{
+		"properties": map[string]interface{}{
+			"code": map[string]interface{}{
+				"description": "状态码，200 代表成功，非 200 代表各类业务/参数错误",
+				"format":      "int64",
+				"type":        "integer",
+			},
+			"data": map[string]interface{}{
+				"$ref":        "#/definitions/LocationListData",
+				"description": "热门位置列表数据内容",
+			},
+			"msg": map[string]interface{}{
+				"description": "错误描述，成功时为空",
+				"type":        "string",
+			},
+			"trace": map[string]interface{}{
+				"description": "系统追踪唯一链路 ID",
+				"type":        "string",
+			},
+		},
+		"required": []interface{}{"code", "msg", "trace", "data"},
+		"type":     "object",
+	}
+
+	// 12. 同步更新 required 属性字段以规避 ApiFox 出现未定义字段的必填校验错误
+	for _, key := range []string{"CompanyInfo", "DepotInfo", "LocationInfo", "MembershipBadge", "TradingListReq"} {
+		if def, exists := definitions[key].(map[string]interface{}); exists {
+			syncRequired(def)
+		}
 	}
 
 	updatedData, err := json.MarshalIndent(swagger, "", "    ")
