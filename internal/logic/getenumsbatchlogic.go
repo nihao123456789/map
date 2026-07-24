@@ -39,7 +39,7 @@ func (l *GetEnumsBatchLogic) GetEnumsBatch(req *types.EnumsBatchReq) (resp *type
 		return nil, errorx.NewCodeError(consts.DefaultErrorCode, "批量拉取字典分类数量超出系统限制")
 	}
 
-	enumsMap := make(map[string][]types.EnumInfo)
+	enumsMap := make(map[string][]types.EnumInfo, len(req.Categories))
 	for _, cat := range req.Categories {
 		// Take 接口首先从本地 5 分钟 TTL 缓存加载。若未命中，利用 singleflight 保护去数据库加载并回填
 		data, err := l.svcCtx.EnumsCache.Take("enums:"+cat, func() (interface{}, error) {

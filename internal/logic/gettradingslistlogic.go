@@ -295,15 +295,15 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 	g, gCtx := errgroup.WithContext(l.ctx)
 
 	var (
-		companiesMap       = make(map[int64]*companies.Companies)
-		purchasesMap       = make(map[int64][]*membershippurchases.MembershipPurchases)
+		companiesMap       = make(map[int64]*companies.Companies, len(companyIdsMap))
+		purchasesMap       = make(map[int64][]*membershippurchases.MembershipPurchases, len(companyIdsMap))
 		vipPlansMap        = make(map[int64]*vipplans.VipPlans)
-		depotsMap          = make(map[int64]*depots.Depots)
-		locationsMap       = make(map[int64]*treenodes.TreeNodes)
-		conditionsMap      = make(map[string]*types.EnumInfo)
-		equipmentTypesMap  = make(map[string]*types.EnumInfo)
-		commercialTermsMap = make(map[string]*types.EnumInfo)
-		categoriesMap      = make(map[string]*types.EnumInfo)
+		depotsMap          = make(map[int64]*depots.Depots, len(depotIdsMap))
+		locationsMap       = make(map[int64]*treenodes.TreeNodes, len(locationIdsMap))
+		conditionsMap      = make(map[string]*types.EnumInfo, len(conditionIdsMap))
+		equipmentTypesMap  = make(map[string]*types.EnumInfo, len(equipmentTypeIdsMap))
+		commercialTermsMap = make(map[string]*types.EnumInfo, len(commercialTermIdsMap))
+		categoriesMap      = make(map[string]*types.EnumInfo, len(categoryIdsMap))
 	)
 
 	// 1. 并发拉取企业详细信息、激活会员记录及对应会员套餐配置
