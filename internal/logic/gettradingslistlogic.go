@@ -81,7 +81,7 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 
 	if len(req.Category) > 0 {
 		gParam.Go(func() error {
-			key := "enum_val:" + enums.CategoryContainerCategory + ":" + req.Category
+			key := consts.GetEnumValCacheKey(enums.CategoryContainerCategory, req.Category)
 			val, err := l.svcCtx.EnumsCache.Take(key, func() (interface{}, error) {
 				res, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(gCtxParam, enums.CategoryContainerCategory, req.Category)
 				if err != nil && err != enums.ErrNotFound {
@@ -105,7 +105,7 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 
 	if len(req.EquipmentType) > 0 {
 		gParam.Go(func() error {
-			key := "enum_val:" + enums.CategoryEquipmentTypes + ":" + req.EquipmentType
+			key := consts.GetEnumValCacheKey(enums.CategoryEquipmentTypes, req.EquipmentType)
 			val, err := l.svcCtx.EnumsCache.Take(key, func() (interface{}, error) {
 				res, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(gCtxParam, enums.CategoryEquipmentTypes, req.EquipmentType)
 				if err != nil && err != enums.ErrNotFound {
@@ -129,7 +129,7 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 
 	if len(req.Condition) > 0 {
 		gParam.Go(func() error {
-			key := "enum_val:" + enums.CategoryConditions + ":" + req.Condition
+			key := consts.GetEnumValCacheKey(enums.CategoryConditions, req.Condition)
 			val, err := l.svcCtx.EnumsCache.Take(key, func() (interface{}, error) {
 				res, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(gCtxParam, enums.CategoryConditions, req.Condition)
 				if err != nil && err != enums.ErrNotFound {
@@ -153,7 +153,7 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 
 	if len(req.CommercialTerm) > 0 {
 		gParam.Go(func() error {
-			key := "enum_val:" + enums.CategoryCommercialTerm + ":" + req.CommercialTerm
+			key := consts.GetEnumValCacheKey(enums.CategoryCommercialTerm, req.CommercialTerm)
 			val, err := l.svcCtx.EnumsCache.Take(key, func() (interface{}, error) {
 				res, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(gCtxParam, enums.CategoryCommercialTerm, req.CommercialTerm)
 				if err != nil && err != enums.ErrNotFound {
@@ -397,7 +397,7 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 	// 4. 并发从本地缓存加载箱况字典项详情
 	if len(conditionIdsMap) > 0 {
 		g.Go(func() error {
-			data, err := l.svcCtx.EnumsCache.Take("enums:"+enums.CategoryConditions, func() (interface{}, error) {
+			data, err := l.svcCtx.EnumsCache.Take(consts.GetEnumsCacheKey(enums.CategoryConditions), func() (interface{}, error) {
 				list, err := l.svcCtx.EnumsModel.FindByCategories(gCtx, []string{enums.CategoryConditions})
 				if err != nil {
 					return nil, err
@@ -435,7 +435,7 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 	// 5. 并发从本地缓存加载箱型规格字典项详情
 	if len(equipmentTypeIdsMap) > 0 {
 		g.Go(func() error {
-			data, err := l.svcCtx.EnumsCache.Take("enums:"+enums.CategoryEquipmentTypes, func() (interface{}, error) {
+			data, err := l.svcCtx.EnumsCache.Take(consts.GetEnumsCacheKey(enums.CategoryEquipmentTypes), func() (interface{}, error) {
 				list, err := l.svcCtx.EnumsModel.FindByCategories(gCtx, []string{enums.CategoryEquipmentTypes})
 				if err != nil {
 					return nil, err
@@ -473,7 +473,7 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 	// 6. 并发从本地缓存加载提箱方式字典项详情
 	if len(commercialTermIdsMap) > 0 {
 		g.Go(func() error {
-			data, err := l.svcCtx.EnumsCache.Take("enums:"+enums.CategoryCommercialTerm, func() (interface{}, error) {
+			data, err := l.svcCtx.EnumsCache.Take(consts.GetEnumsCacheKey(enums.CategoryCommercialTerm), func() (interface{}, error) {
 				list, err := l.svcCtx.EnumsModel.FindByCategories(gCtx, []string{enums.CategoryCommercialTerm})
 				if err != nil {
 					return nil, err
@@ -511,7 +511,7 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 	// 7. 并发从本地缓存加载箱型大类字典项详情
 	if len(categoryIdsMap) > 0 {
 		g.Go(func() error {
-			data, err := l.svcCtx.EnumsCache.Take("enums:"+enums.CategoryContainerCategory, func() (interface{}, error) {
+			data, err := l.svcCtx.EnumsCache.Take(consts.GetEnumsCacheKey(enums.CategoryContainerCategory), func() (interface{}, error) {
 				list, err := l.svcCtx.EnumsModel.FindByCategories(gCtx, []string{enums.CategoryContainerCategory})
 				if err != nil {
 					return nil, err

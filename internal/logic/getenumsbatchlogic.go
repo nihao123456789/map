@@ -42,7 +42,7 @@ func (l *GetEnumsBatchLogic) GetEnumsBatch(req *types.EnumsBatchReq) (resp *type
 	enumsMap := make(map[string][]types.EnumInfo, len(req.Categories))
 	for _, cat := range req.Categories {
 		// Take 接口首先从本地 5 分钟 TTL 缓存加载。若未命中，利用 singleflight 保护去数据库加载并回填
-		data, err := l.svcCtx.EnumsCache.Take("enums:"+cat, func() (interface{}, error) {
+		data, err := l.svcCtx.EnumsCache.Take(consts.GetEnumsCacheKey(cat), func() (interface{}, error) {
 			list, err := l.svcCtx.EnumsModel.FindByCategories(l.ctx, []string{cat})
 			if err != nil {
 				return nil, err
