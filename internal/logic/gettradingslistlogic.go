@@ -43,12 +43,10 @@ func NewGetTradingsListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *G
 // GetTradingsList 获取集装箱交易挂单列表。
 //
 // 参数：
-//   - req：请求参数（包含 location_id 和 direction）
+//   - req：请求参数（包含 LocationIds、Direction、Category、Condition、Color、EquipmentType、CommercialTerm、YearOfManufactureRangeFrom 以及分页参数 LastId 和 PageSize 等）
 //
 // 返回：响应结果，以及错误信息。
 func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp *types.TradingListResp, err error) {
-	l.Infof("获取交易挂单列表请求: location_ids=%v, direction=%s, last_id=%d, page_size=%d", req.LocationIds, req.Direction, req.LastId, req.PageSize)
-
 	// 对传入的位置 ID 列表进行去重处理，规避多余重复值占位符开销
 	req.LocationIds = slices.Unique(req.LocationIds)
 
