@@ -2,16 +2,15 @@ package logic
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"strconv"
-	"time"
 
 	"map-server/internal/svc"
 	"map-server/internal/types"
 	"map-server/internal/consts"
 	"map-server/internal/errorx"
 	"map-server/pkg/slices"
+	"map-server/pkg/times"
 	"map-server/internal/model/mysql/map_server/offers"
 	"map-server/internal/model/mysql/map_server/companies"
 	"map-server/internal/model/mysql/map_server/vipplans"
@@ -542,8 +541,8 @@ func toOfferInfo(item *offers.Offers) types.OfferInfo {
 		// ExpectedDeliveryTo:             formatTime(item.ExpectedDeliveryTo),
 		DepotId:                        int32(item.DepotId.Int64),
 		UniqueNumber:                   item.UniqueNumber.String,
-		CreatedAt:                      item.CreatedAt.In(time.FixedZone("CST", 8*3600)).Format("2006-01-02T15:04:05.000-07:00"),
-		UpdatedAt:                      item.UpdatedAt.In(time.FixedZone("CST", 8*3600)).Format("2006-01-02T15:04:05.000-07:00"),
+		CreatedAt:                      times.FormatDateTime(item.CreatedAt),
+		UpdatedAt:                      times.FormatDateTime(item.UpdatedAt),
 		Price:                          float32(item.Price.Float64),
 		// Color:                          int32(item.Color.Int64),
 		// EstimatedEmptyDeliveryDateFrom: formatTime(item.EstimatedEmptyDeliveryDateFrom),
@@ -560,7 +559,7 @@ func toOfferInfo(item *offers.Offers) types.OfferInfo {
 		// Extra:                          item.Extra.String,
 		Colors:                         item.Colors.String,
 		// PinnedAt:                       formatTime(item.PinnedAt),
-		BumpedAt:                       formatTime(item.BumpedAt),
+		BumpedAt:                       times.FormatTime(item.BumpedAt),
 		// StorageFreeDays:                int32(item.StorageFreeDays),
 		// ConditionTagIds:                item.ConditionTagIds.String,
 		// ConditionLogo:                  int32(item.ConditionLogo.Int64),
@@ -587,14 +586,7 @@ func toOfferInfo(item *offers.Offers) types.OfferInfo {
 	}
 }
 
-// formatTime 辅助格式化 NullTime。
-func formatTime(nt sql.NullTime) string {
-	if nt.Valid {
-		shanghaiZone := time.FixedZone("CST", 8*3600)
-		return nt.Time.In(shanghaiZone).Format("2006-01-02T15:04:05.000-07:00")
-	}
-	return ""
-}
+
 
 // toCompanyInfo 将企业数据库模型映射转换为 API 返回的 types.CompanyInfo 结构体指针。
 func toCompanyInfo(
