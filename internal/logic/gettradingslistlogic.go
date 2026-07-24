@@ -40,6 +40,32 @@ func NewGetTradingsListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *G
 	}
 }
 
+// fetchEnum 封装统一获取并反查数据字典与防穿透缓存逻辑的方法。
+// 为了避免隐式闭包捕获外部复杂对象与上下文指针，该方法显式接收外部参数并返回对应的包装执行函数。
+func (l *GetTradingsListLogic) fetchEnum(ctx context.Context, category, value, logName string, target **enums.Enums) func() error {
+	return func() error {
+		key := consts.GetEnumValCacheKey(category, value)
+		val, err := l.svcCtx.EnumsCache.Take(key, func() (interface{}, error) {
+			res, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(ctx, category, value)
+			if err != nil && err != enums.ErrNotFound {
+				return nil, err
+			}
+			if err == enums.ErrNotFound {
+				return &enums.Enums{ItemId: "0"}, nil // 哨兵值防御缓存穿透
+			}
+			return res, nil
+		})
+		if err != nil {
+			l.Errorf("从 enums 数据表获取%s失败: value=%s, err=%v", logName, value, err)
+			return err
+		}
+		if cached, ok := val.(*enums.Enums); ok && cached.ItemId != "0" {
+			*target = cached
+		}
+		return nil
+	}
+}
+
 // GetTradingsList 获取集装箱交易挂单列表。
 //
 // 参数：
@@ -78,99 +104,19 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 	gParam, gCtxParam := errgroup.WithContext(l.ctx)
 
 	if len(req.Category) > 0 {
-		gParam.Go(func() error {
-			key := consts.GetEnumValCacheKey(enums.CategoryContainerCategory, req.Category)
-			val, err := l.svcCtx.EnumsCache.Take(key, func() (interface{}, error) {
-				res, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(gCtxParam, enums.CategoryContainerCategory, req.Category)
-				if err != nil && err != enums.ErrNotFound {
-					return nil, err
-				}
-				if err == enums.ErrNotFound {
-					return &enums.Enums{ItemId: "0"}, nil // 哨兵值防御缓存穿透
-				}
-				return res, nil
-			})
-			if err != nil {
-				l.Errorf("从 enums 数据表获取箱型分类失败: value=%s, err=%v", req.Category, err)
-				return err
-			}
-			if cached, ok := val.(*enums.Enums); ok && cached.ItemId != "0" {
-				enumCat = cached
-			}
-			return nil
-		})
+		gParam.Go(l.fetchEnum(gCtxParam, enums.CategoryContainerCategory, req.Category, "箱型分类", &enumCat))
 	}
 
 	if len(req.EquipmentType) > 0 {
-		gParam.Go(func() error {
-			key := consts.GetEnumValCacheKey(enums.CategoryEquipmentTypes, req.EquipmentType)
-			val, err := l.svcCtx.EnumsCache.Take(key, func() (interface{}, error) {
-				res, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(gCtxParam, enums.CategoryEquipmentTypes, req.EquipmentType)
-				if err != nil && err != enums.ErrNotFound {
-					return nil, err
-				}
-				if err == enums.ErrNotFound {
-					return &enums.Enums{ItemId: "0"}, nil // 哨兵值防御缓存穿透
-				}
-				return res, nil
-			})
-			if err != nil {
-				l.Errorf("从 enums 数据表获取箱型规格失败: value=%s, err=%v", req.EquipmentType, err)
-				return err
-			}
-			if cached, ok := val.(*enums.Enums); ok && cached.ItemId != "0" {
-				enumEquip = cached
-			}
-			return nil
-		})
+		gParam.Go(l.fetchEnum(gCtxParam, enums.CategoryEquipmentTypes, req.EquipmentType, "箱型规格", &enumEquip))
 	}
 
 	if len(req.Condition) > 0 {
-		gParam.Go(func() error {
-			key := consts.GetEnumValCacheKey(enums.CategoryConditions, req.Condition)
-			val, err := l.svcCtx.EnumsCache.Take(key, func() (interface{}, error) {
-				res, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(gCtxParam, enums.CategoryConditions, req.Condition)
-				if err != nil && err != enums.ErrNotFound {
-					return nil, err
-				}
-				if err == enums.ErrNotFound {
-					return &enums.Enums{ItemId: "0"}, nil // 哨兵值防御缓存穿透
-				}
-				return res, nil
-			})
-			if err != nil {
-				l.Errorf("从 enums 数据表获取箱况失败: value=%s, err=%v", req.Condition, err)
-				return err
-			}
-			if cached, ok := val.(*enums.Enums); ok && cached.ItemId != "0" {
-				enumCond = cached
-			}
-			return nil
-		})
+		gParam.Go(l.fetchEnum(gCtxParam, enums.CategoryConditions, req.Condition, "箱况", &enumCond))
 	}
 
 	if len(req.CommercialTerm) > 0 {
-		gParam.Go(func() error {
-			key := consts.GetEnumValCacheKey(enums.CategoryCommercialTerm, req.CommercialTerm)
-			val, err := l.svcCtx.EnumsCache.Take(key, func() (interface{}, error) {
-				res, err := l.svcCtx.EnumsModel.FindOneByCategoryAndValue(gCtxParam, enums.CategoryCommercialTerm, req.CommercialTerm)
-				if err != nil && err != enums.ErrNotFound {
-					return nil, err
-				}
-				if err == enums.ErrNotFound {
-					return &enums.Enums{ItemId: "0"}, nil // 哨兵值防御缓存穿透
-				}
-				return res, nil
-			})
-			if err != nil {
-				l.Errorf("从 enums 数据表获取提箱方式失败: value=%s, err=%v", req.CommercialTerm, err)
-				return err
-			}
-			if cached, ok := val.(*enums.Enums); ok && cached.ItemId != "0" {
-				enumTerm = cached
-			}
-			return nil
-		})
+		gParam.Go(l.fetchEnum(gCtxParam, enums.CategoryCommercialTerm, req.CommercialTerm, "提箱方式", &enumTerm))
 	}
 
 	if err := gParam.Wait(); err != nil {
