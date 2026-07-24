@@ -7,6 +7,7 @@ import (
 	"map-server/internal/types"
 	"map-server/internal/consts"
 	"map-server/internal/errorx"
+	"map-server/pkg/slices"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -30,17 +31,7 @@ func NewGetEnumsBatchLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Get
 // GetEnumsBatch 实现批量拉取字典项的业务逻辑，以 category 进行分组返回。
 func (l *GetEnumsBatchLogic) GetEnumsBatch(req *types.EnumsBatchReq) (resp *types.EnumsBatchResp, err error) {
 	// 对传入的分类进行去重处理，减少重复缓存查询开销
-	if len(req.Categories) > 0 {
-		uniqueCats := make([]string, 0, len(req.Categories))
-		seen := make(map[string]struct{}, len(req.Categories))
-		for _, cat := range req.Categories {
-			if _, exists := seen[cat]; !exists {
-				seen[cat] = struct{}{}
-				uniqueCats = append(uniqueCats, cat)
-			}
-		}
-		req.Categories = uniqueCats
-	}
+	req.Categories = slices.Unique(req.Categories)
 
 	// 校验拉取的分类数量是否超出系统最大限制，防御性限流
 	if len(req.Categories) > consts.MaxEnumsCategoriesLimit {
