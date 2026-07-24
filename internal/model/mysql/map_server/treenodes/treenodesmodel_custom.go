@@ -3,7 +3,8 @@ package treenodes
 import (
 	"context"
 	"fmt"
-	"strings"
+
+	"map-server/pkg/slices"
 )
 
 type TreeNodesModelCustom interface {
@@ -20,18 +21,13 @@ func (m *customTreeNodesModel) FindByIds(ctx context.Context, ids []int64) ([]*T
 	}
 
 	// 动态拼接 in 占位符以规避 SQL 注入
-	placeholders := make([]string, len(ids))
-	args := make([]interface{}, len(ids))
-	for i, id := range ids {
-		placeholders[i] = "?"
-		args[i] = id
-	}
+	placeholders, args := slices.BuildInArgs(ids)
 
 	query := fmt.Sprintf(
 		"select %s from %s where `id` in (%s)",
 		treeNodesRowsCustom,
 		m.table,
-		strings.Join(placeholders, ","),
+		placeholders,
 	)
 
 	var resp []*TreeNodes

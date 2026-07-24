@@ -3,7 +3,8 @@ package depots
 import (
 	"context"
 	"fmt"
-	"strings"
+
+	"map-server/pkg/slices"
 )
 
 type DepotsModelCustom interface {
@@ -18,16 +19,11 @@ func (m *customDepotsModel) FindByIds(ctx context.Context, ids []int64) ([]*Depo
 	}
 
 	// 动态拼接 in 占位符以规避 SQL 注入
-	placeholders := make([]string, len(ids))
-	args := make([]interface{}, 0, len(ids))
-	for i, id := range ids {
-		placeholders[i] = "?"
-		args = append(args, id)
-	}
+	placeholders, args := slices.BuildInArgs(ids)
 
 	query := fmt.Sprintf(
 		"select %s from %s where `id` in (%s)",
-		depotsRowsCustom, m.table, strings.Join(placeholders, ","),
+		depotsRowsCustom, m.table, placeholders,
 	)
 
 	var resp []*Depots

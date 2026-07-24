@@ -3,9 +3,9 @@ package enums
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
+	"map-server/pkg/slices"
 )
 
 type EnumsModelCustom interface {
@@ -35,14 +35,11 @@ func (m *customEnumsModel) FindByCategoryAndItemIds(ctx context.Context, categor
 	if len(itemIds) == 0 {
 		return nil, nil
 	}
-	placeholders := make([]string, len(itemIds))
+	placeholders, inArgs := slices.BuildInArgs(itemIds)
 	args := make([]interface{}, 0, len(itemIds)+1)
 	args = append(args, category)
-	for i, id := range itemIds {
-		placeholders[i] = "?"
-		args = append(args, id)
-	}
-	query := fmt.Sprintf("select %s from %s where `category` = ? and `item_id` in (%s)", enumsRows, m.table, strings.Join(placeholders, ","))
+	args = append(args, inArgs...)
+	query := fmt.Sprintf("select %s from %s where `category` = ? and `item_id` in (%s)", enumsRows, m.table, placeholders)
 	var resp []*Enums
 	err := m.conn.QueryRowsCtx(ctx, &resp, query, args...)
 	return resp, err
@@ -55,13 +52,8 @@ func (m *customEnumsModel) FindByCategories(ctx context.Context, categories []st
 		err := m.conn.QueryRowsCtx(ctx, &resp, query)
 		return resp, err
 	}
-	placeholders := make([]string, len(categories))
-	args := make([]interface{}, len(categories))
-	for i, cat := range categories {
-		placeholders[i] = "?"
-		args[i] = cat
-	}
-	query := fmt.Sprintf("select %s from %s where `category` in (%s)", enumsRows, m.table, strings.Join(placeholders, ","))
+	placeholders, args := slices.BuildInArgs(categories)
+	query := fmt.Sprintf("select %s from %s where `category` in (%s)", enumsRows, m.table, placeholders)
 	var resp []*Enums
 	err := m.conn.QueryRowsCtx(ctx, &resp, query, args...)
 	return resp, err

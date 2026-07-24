@@ -3,7 +3,8 @@ package companies
 import (
 	"context"
 	"fmt"
-	"strings"
+
+	"map-server/pkg/slices"
 )
 
 type CompaniesModelCustom interface {
@@ -25,18 +26,13 @@ func (m *customCompaniesModel) FindByIds(ctx context.Context, ids []int64) ([]*C
 	}
 
 	// 拼接占位符，例如 (?, ?, ?)
-	placeholders := make([]string, len(ids))
-	args := make([]interface{}, len(ids))
-	for i, id := range ids {
-		placeholders[i] = "?"
-		args[i] = id
-	}
+	placeholders, args := slices.BuildInArgs(ids)
 
 	query := fmt.Sprintf(
 		"select %s from %s where `id` in (%s) and `deleted_at` is null",
 		companiesRowsCustom,
 		m.table,
-		strings.Join(placeholders, ","),
+		placeholders,
 	)
 
 	var resp []*Companies

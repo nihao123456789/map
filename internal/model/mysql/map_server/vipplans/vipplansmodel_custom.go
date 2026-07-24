@@ -3,7 +3,8 @@ package vipplans
 import (
 	"context"
 	"fmt"
-	"strings"
+
+	"map-server/pkg/slices"
 )
 
 type VipPlansModelCustom interface {
@@ -18,16 +19,11 @@ func (m *customVipPlansModel) FindByIds(ctx context.Context, ids []int64) ([]*Vi
 	}
 
 	// 动态拼接 in 占位符以规避 SQL 注入
-	placeholders := make([]string, len(ids))
-	args := make([]interface{}, 0, len(ids))
-	for i, id := range ids {
-		placeholders[i] = "?"
-		args = append(args, id)
-	}
+	placeholders, args := slices.BuildInArgs(ids)
 
 	query := fmt.Sprintf(
 		"select %s from %s where `id` in (%s)",
-		vipPlansRowsCustom, m.table, strings.Join(placeholders, ","),
+		vipPlansRowsCustom, m.table, placeholders,
 	)
 
 	var resp []*VipPlans

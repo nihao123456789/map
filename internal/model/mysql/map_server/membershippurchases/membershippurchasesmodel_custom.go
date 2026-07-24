@@ -3,7 +3,8 @@ package membershippurchases
 import (
 	"context"
 	"fmt"
-	"strings"
+
+	"map-server/pkg/slices"
 )
 
 type MembershipPurchasesModelCustom interface {
@@ -18,16 +19,11 @@ func (m *customMembershipPurchasesModel) FindActiveByCompanyIds(ctx context.Cont
 	}
 
 	// 动态拼接 in 占位符以规避 SQL 注入
-	placeholders := make([]string, len(companyIds))
-	args := make([]interface{}, 0, len(companyIds))
-	for i, id := range companyIds {
-		placeholders[i] = "?"
-		args = append(args, id)
-	}
+	placeholders, args := slices.BuildInArgs(companyIds)
 
 	query := fmt.Sprintf(
 		"select %s from %s where `company_id` in (%s) and `status` = 'active' and `expires_at` > UTC_TIMESTAMP() and `deleted_at` is null",
-		membershipPurchasesRowsCustom, m.table, strings.Join(placeholders, ","),
+		membershipPurchasesRowsCustom, m.table, placeholders,
 	)
 
 	var resp []*MembershipPurchases

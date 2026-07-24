@@ -3,7 +3,8 @@ package offers
 import (
 	"context"
 	"fmt"
-	"strings"
+
+	"map-server/pkg/slices"
 )
 
 type LocationCountResult struct {
@@ -43,12 +44,9 @@ func (m *customOffersModel) buildWhereAndArgs(locationIds []int64, direction int
 
 	// 如果 validLocationIds 不为空，则追加 location_id 的 IN 子句进行过滤；否则查询所有位置的挂单数据
 	if len(validLocationIds) > 0 {
-		placeholders := make([]string, len(validLocationIds))
-		for i, id := range validLocationIds {
-			placeholders[i] = "?"
-			args = append(args, id)
-		}
-		baseWhere += fmt.Sprintf(" and `location_id` in (%s)", strings.Join(placeholders, ","))
+		placeholders, inArgs := slices.BuildInArgs(validLocationIds)
+		args = append(args, inArgs...)
+		baseWhere += fmt.Sprintf(" and `location_id` in (%s)", placeholders)
 	}
 
 	// 如果 category > 0，则追加 category 箱型分类条件进行过滤
