@@ -159,7 +159,8 @@ type OfferInfo struct {
 	ConditionInfo      *EnumInfo     `json:"condition_info,optional"`       // 箱况详细信息详情
 	EquipmentTypeInfo  *EnumInfo     `json:"equipment_type_info,optional"`  // 箱型详细信息详情
 	CommercialTermInfo *EnumInfo     `json:"commercial_term_info,optional"` // 贸易条款（提箱方式）详细信息详情
-	CategoryInfo       *EnumInfo     `json:"category_info,optional"`        // 挂单分类详细信息详情
+	CategoryInfo       *EnumInfo             `json:"category_info,optional"`        // 挂单分类详细信息详情
+	AttachmentsCache   *AttachmentsCacheInfo `json:"attachments_cache,optional"`    // 附件 JSON 缓存数据详情
 }
 
 type TradingListReq struct {
@@ -224,4 +225,24 @@ type TradingLocationCountResp struct {
 
 type LocationListResp struct {
 	List []LocationInfo `json:"list"`
+}
+
+type AttachmentsCacheInfo struct {
+	Images    []OfferImage   `json:"images,optional"`
+	Documents []DocumentInfo `json:"documents,optional"`
+}
+
+type OfferImage struct {
+	SignedId    string `json:"signedId"`
+	Filename    string `json:"filename,optional"`
+	ContentType string `json:"contentType,optional"`
+	ByteSize    int64  `json:"byteSize,optional"`
+	Url         string `json:"url,optional"`
+}
+
+type DocumentInfo struct {
+	SignedId    string `json:"signedId"`
+	Filename    string `json:"filename,optional"`
+	ContentType string `json:"contentType,optional"`
+	ByteSize    int64  `json:"byteSize,optional"`
 }

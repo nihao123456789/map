@@ -118,6 +118,30 @@ type (
 		EquipmentTypeInfo              *EnumInfo      `json:"equipment_type_info,optional"` // 箱型详细信息详情
 		CommercialTermInfo             *EnumInfo      `json:"commercial_term_info,optional"` // 贸易条款（提箱方式）详细信息详情
 		CategoryInfo                   *EnumInfo      `json:"category_info,optional"`        // 挂单分类详细信息详情
+		AttachmentsCache               *AttachmentsCacheInfo `json:"attachments_cache,optional"`    // 附件 JSON 缓存数据详情
+	}
+
+	// AttachmentsCacheInfo 附件缓存详情
+	AttachmentsCacheInfo {
+		Images    []OfferImage   `json:"images,optional"`    // 集装箱图片列表
+		Documents []DocumentInfo `json:"documents,optional"` // 其它文档列表
+	}
+
+	// OfferImage 挂单图片信息
+	OfferImage {
+		SignedId    string `json:"signedId"`
+		Filename    string `json:"filename,optional"`
+		ContentType string `json:"contentType,optional"`
+		ByteSize    int64  `json:"byteSize,optional"`
+		Url         string `json:"url,optional"`
+	}
+
+	// DocumentInfo 挂单文档信息
+	DocumentInfo {
+		SignedId    string `json:"signedId"`
+		Filename    string `json:"filename,optional"`
+		ContentType string `json:"contentType,optional"`
+		ByteSize    int64  `json:"byteSize,optional"`
 	}
 
 	// LocationInfo 地理位置树节点信息

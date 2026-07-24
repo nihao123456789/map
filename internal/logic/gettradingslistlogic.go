@@ -3,6 +3,7 @@ package logic
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"strconv"
 	"time"
 
@@ -602,6 +603,49 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 
 // toOfferInfo 将数据库模型转换成 API 响应对应的 OfferInfo 结构体。
 func toOfferInfo(item *offers.Offers) types.OfferInfo {
+	var attachCache *types.AttachmentsCacheInfo
+	if len(item.AttachmentsCache) > 0 {
+		var cache struct {
+			Images []struct {
+				SignedId    string `json:"signedId"`
+				Filename    string `json:"filename"`
+				ContentType string `json:"contentType"`
+				ByteSize    int64  `json:"byteSize"`
+			} `json:"images"`
+			Documents []struct {
+				SignedId    string `json:"signedId"`
+				Filename    string `json:"filename"`
+				ContentType string `json:"contentType"`
+				ByteSize    int64  `json:"byteSize"`
+			} `json:"documents"`
+		}
+		if err := json.Unmarshal([]byte(item.AttachmentsCache), &cache); err == nil {
+			var imagesList []types.OfferImage
+			for _, img := range cache.Images {
+				imagesList = append(imagesList, types.OfferImage{
+					SignedId:    img.SignedId,
+					Filename:    img.Filename,
+					ContentType: img.ContentType,
+					ByteSize:    img.ByteSize,
+					Url:         "http://api.cgboxx.com/blobs/" + img.SignedId,
+				})
+			}
+			var docsList []types.DocumentInfo
+			for _, doc := range cache.Documents {
+				docsList = append(docsList, types.DocumentInfo{
+					SignedId:    doc.SignedId,
+					Filename:    doc.Filename,
+					ContentType: doc.ContentType,
+					ByteSize:    doc.ByteSize,
+				})
+			}
+			attachCache = &types.AttachmentsCacheInfo{
+				Images:    imagesList,
+				Documents: docsList,
+			}
+		}
+	}
+
 	return types.OfferInfo{
 		Id:                             item.Id,
 		Condition:                      int32(item.Condition.Int64),
@@ -696,6 +740,7 @@ func toOfferInfo(item *offers.Offers) types.OfferInfo {
 		IsNonNegotiable:                item.IsNonNegotiable != 0,
 		// HasDamages:                     item.HasDamages != 0,
 		// WithEasyOpenDoor:               item.WithEasyOpenDoor.Int64 != 0,
+		AttachmentsCache:               attachCache,
 	}
 }
 
