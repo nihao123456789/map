@@ -31,4 +31,7 @@ const (
 
 	// DefaultErrorCode 默认的业务错误状态码 (400 语义)
 	DefaultErrorCode = 400
+
+	// MaxLocationIdsLimit 单次查询支持过滤的最大位置 ID 数量上限 (100个)
+	MaxLocationIdsLimit = 100
 )

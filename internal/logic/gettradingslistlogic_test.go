@@ -59,6 +59,33 @@ func TestGetTradingsList_LocationInfo(t *testing.T) {
 	fmt.Printf("--- 测试成功，返回数据样例 ---\n%s\n", string(resBytes))
 }
 
+func TestGetTradingsList_LocationLimit(t *testing.T) {
+	var c config.Config
+	conf.MustLoad("../../etc/mapserver-dev.yaml", &c)
+
+	svcCtx := svc.NewServiceContext(c)
+	l := logic.NewGetTradingsListLogic(context.Background(), svcCtx)
+
+	// 构建 101 个位置 ID 数组以触发超限校验
+	tooManyIds := make([]int64, 101)
+	for i := 0; i < 101; i++ {
+		tooManyIds[i] = int64(1000 + i)
+	}
+
+	req := &types.TradingListReq{
+		LocationIds:                tooManyIds,
+		Direction:                  "supply",
+		PageSize:                   1,
+	}
+
+	_, err := l.GetTradingsList(req)
+	if err == nil {
+		t.Fatal("期望位置 ID 数量超限报错，但实际没有报错")
+	}
+
+	fmt.Printf("--- 数量超限测试成功，捕获到预期错误: %v ---\n", err)
+}
+
 func TestGetTradingLocationCount(t *testing.T) {
 	var c config.Config
 	// 加载本地开发配置文件

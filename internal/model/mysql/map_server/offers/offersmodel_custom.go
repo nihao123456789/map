@@ -20,7 +20,7 @@ func (m *customOffersModel) buildWhereAndArgs(locationIds []int64, direction int
 	args = append(args, direction)
 
 	// 过滤并提取有效的位置 ID 列表
-	var validLocationIds []int64
+	validLocationIds := make([]int64, 0, len(locationIds))
 	for _, id := range locationIds {
 		if id > 0 {
 			validLocationIds = append(validLocationIds, id)

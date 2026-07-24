@@ -10,6 +10,7 @@ import (
 	"map-server/internal/svc"
 	"map-server/internal/types"
 	"map-server/internal/consts"
+	"map-server/internal/errorx"
 	"map-server/internal/model/mysql/map_server/offers"
 	"map-server/internal/model/mysql/map_server/companies"
 	"map-server/internal/model/mysql/map_server/vipplans"
@@ -46,6 +47,25 @@ func NewGetTradingsListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *G
 // 返回：响应结果，以及错误信息。
 func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp *types.TradingListResp, err error) {
 	l.Infof("获取交易挂单列表请求: location_ids=%v, direction=%s, last_id=%d, page_size=%d", req.LocationIds, req.Direction, req.LastId, req.PageSize)
+
+	// 对传入的位置 ID 列表进行去重处理，规避多余重复值占位符开销
+	if len(req.LocationIds) > 0 {
+		uniqueIds := make([]int64, 0, len(req.LocationIds))
+		seen := make(map[int64]struct{}, len(req.LocationIds))
+		for _, id := range req.LocationIds {
+			if _, exists := seen[id]; !exists {
+				seen[id] = struct{}{}
+				uniqueIds = append(uniqueIds, id)
+			}
+		}
+		req.LocationIds = uniqueIds
+	}
+
+	// 校验过滤的位置 ID 数量是否超出系统最大限制，防止 SQL IN 解析及数据库引擎负载过高
+	if len(req.LocationIds) > consts.MaxLocationIdsLimit {
+		l.Errorf("位置过滤参数 location_ids 数量超限: 传入数量=%d, 上限=%d", len(req.LocationIds), consts.MaxLocationIdsLimit)
+		return nil, errorx.NewCodeError(consts.DefaultErrorCode, "位置过滤数量超出系统限制")
+	}
 	// 根据 direction 映射数据库中的整数 direction 值
 	var dbDirection int64
 	switch req.Direction {
