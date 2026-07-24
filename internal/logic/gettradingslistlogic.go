@@ -66,6 +66,18 @@ func (l *GetTradingsListLogic) fetchEnum(ctx context.Context, category, value, l
 	}
 }
 
+// parseEnumItemID 辅助解析数据字典项中的 ItemId 字符串为 int64 整型数字。如果指针为空或解析失败，默认返回 0。
+func parseEnumItemID(enum *enums.Enums) int64 {
+	if enum == nil {
+		return 0
+	}
+	val, err := strconv.ParseInt(enum.ItemId, 10, 64)
+	if err != nil {
+		return 0
+	}
+	return val
+}
+
 // GetTradingsList 获取集装箱交易挂单列表。
 //
 // 参数：
@@ -123,41 +135,10 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 		return nil, err
 	}
 
-	var categoryItemIDStr = "0"
-	if enumCat != nil {
-		categoryItemIDStr = enumCat.ItemId
-	}
-	dbCategory, err := strconv.ParseInt(categoryItemIDStr, 10, 64)
-	if err != nil {
-		dbCategory = 0
-	}
-
-	var equipItemIDStr = "0"
-	if enumEquip != nil {
-		equipItemIDStr = enumEquip.ItemId
-	}
-	dbEquipmentType, err := strconv.ParseInt(equipItemIDStr, 10, 64)
-	if err != nil {
-		dbEquipmentType = 0
-	}
-
-	var itemIDStr = "0"
-	if enumCond != nil {
-		itemIDStr = enumCond.ItemId
-	}
-	dbCondition, err := strconv.ParseInt(itemIDStr, 10, 64)
-	if err != nil {
-		dbCondition = 0
-	}
-
-	var termItemIDStr = "0"
-	if enumTerm != nil {
-		termItemIDStr = enumTerm.ItemId
-	}
-	dbCommercialTerm, err := strconv.ParseInt(termItemIDStr, 10, 64)
-	if err != nil {
-		dbCommercialTerm = 0
-	}
+	dbCategory := parseEnumItemID(enumCat)
+	dbEquipmentType := parseEnumItemID(enumEquip)
+	dbCondition := parseEnumItemID(enumCond)
+	dbCommercialTerm := parseEnumItemID(enumTerm)
 
 	// 解析 color 颜色参数：直接使用传入的颜色标识（如 "RAL 1015"），供底层 colors 字段的模糊匹配使用
 	dbColor := req.Color
