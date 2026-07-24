@@ -2,7 +2,7 @@
 // goctl 1.10.1
 
 // Package svc 定义服务上下文（ServiceContext），
-// 用于集中管理所有中间件客户端（MySQL、Redis、PostgreSQL 等）的生命周期，
+// 用于集中管理所有数据库客户端（MySQL 等）的生命周期，
 // 并通过依赖注入的方式提供给各业务逻辑层使用。
 package svc
 

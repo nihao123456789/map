@@ -1,5 +1,7 @@
 package errorx
 
+import "map-server/internal/consts"
+
 // CodeError 代表自定义的业务错误实体
 type CodeError struct {
 	Code int    `json:"code"`
@@ -20,5 +22,5 @@ func NewCodeError(code int, msg string) error {
 
 // NewDefaultError 实例化一个默认的业务错误
 func NewDefaultError(msg string) error {
-	return NewCodeError(400, msg)
+	return NewCodeError(consts.DefaultErrorCode, msg)
 }

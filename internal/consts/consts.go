@@ -28,4 +28,7 @@ const (
 	DefaultRateLimitQPS = 100.0
 	// DefaultRateLimitBurst 默认限流突发桶容量上限 (20)
 	DefaultRateLimitBurst = 20
+
+	// DefaultErrorCode 默认的业务错误状态码 (400 语义)
+	DefaultErrorCode = 400
 )

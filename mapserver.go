@@ -70,7 +70,7 @@ func main() {
 	server := rest.MustNewServer(c.RestConf)
 	defer server.Stop()
 
-	// 初始化服务上下文（包含 MySQL、Redis 连接等所有依赖）
+	// 初始化服务上下文（包含 MySQL 连接等所有依赖）
 	ctx := svc.NewServiceContext(c)
 
 	// 注册全局运行时 Panic 兜底恢复中间件
