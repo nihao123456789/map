@@ -66,6 +66,45 @@ func (l *GetTradingsListLogic) fetchEnum(ctx context.Context, category, value, l
 	}
 }
 
+// fetchEnumMap 封装统一从本地缓存批量加载指定分类数据字典项详情，并过滤填充到目标映射中的逻辑方法。
+// 为了避免隐式闭包捕获外部复杂对象与上下文指针，该方法显式接收所有必需的上下文、过滤映射和目标映射。
+func (l *GetTradingsListLogic) fetchEnumMap(ctx context.Context, category, logName string, filterMap map[string]struct{}, targetMap map[string]*types.EnumInfo) func() error {
+	return func() error {
+		data, err := l.svcCtx.EnumsCache.Take(consts.GetEnumsCacheKey(category), func() (interface{}, error) {
+			list, err := l.svcCtx.EnumsModel.FindByCategories(ctx, []string{category})
+			if err != nil {
+				return nil, err
+			}
+			res := make([]types.EnumInfo, 0, len(list))
+			for _, item := range list {
+				res = append(res, types.EnumInfo{
+					Category:     item.Category,
+					CategoryName: item.CategoryName,
+					ItemId:       item.ItemId,
+					Value:        item.Value,
+					Name:         item.Name,
+					NameZh:       item.NameZh,
+					Extra:        item.Extra,
+				})
+			}
+			return res, nil
+		})
+		if err != nil {
+			l.Errorf("并发获取%s字典数据失败: %v", logName, err)
+			return err
+		}
+		if cachedList, ok := data.([]types.EnumInfo); ok {
+			for _, val := range cachedList {
+				if _, exists := filterMap[val.ItemId]; exists {
+					valCopy := val
+					targetMap[val.ItemId] = &valCopy
+				}
+			}
+		}
+		return nil
+	}
+}
+
 // parseEnumItemID 辅助解析数据字典项中的 ItemId 字符串为 int64 整型数字。如果指针为空或解析失败，默认返回 0。
 func parseEnumItemID(enum *enums.Enums) int64 {
 	if enum == nil {
@@ -321,154 +360,22 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 
 	// 4. 并发从本地缓存加载箱况字典项详情
 	if len(conditionIdsMap) > 0 {
-		g.Go(func() error {
-			data, err := l.svcCtx.EnumsCache.Take(consts.GetEnumsCacheKey(enums.CategoryConditions), func() (interface{}, error) {
-				list, err := l.svcCtx.EnumsModel.FindByCategories(gCtx, []string{enums.CategoryConditions})
-				if err != nil {
-					return nil, err
-				}
-				res := make([]types.EnumInfo, 0, len(list))
-				for _, item := range list {
-					res = append(res, types.EnumInfo{
-						Category:     item.Category,
-						CategoryName: item.CategoryName,
-						ItemId:       item.ItemId,
-						Value:        item.Value,
-						Name:         item.Name,
-						NameZh:       item.NameZh,
-						Extra:        item.Extra,
-					})
-				}
-				return res, nil
-			})
-			if err != nil {
-				l.Errorf("并发获取箱况字典数据失败: %v", err)
-				return err
-			}
-			if cachedList, ok := data.([]types.EnumInfo); ok {
-				for _, val := range cachedList {
-					if _, exists := conditionIdsMap[val.ItemId]; exists {
-						valCopy := val
-						conditionsMap[val.ItemId] = &valCopy
-					}
-				}
-			}
-			return nil
-		})
+		g.Go(l.fetchEnumMap(gCtx, enums.CategoryConditions, "箱况", conditionIdsMap, conditionsMap))
 	}
 
 	// 5. 并发从本地缓存加载箱型规格字典项详情
 	if len(equipmentTypeIdsMap) > 0 {
-		g.Go(func() error {
-			data, err := l.svcCtx.EnumsCache.Take(consts.GetEnumsCacheKey(enums.CategoryEquipmentTypes), func() (interface{}, error) {
-				list, err := l.svcCtx.EnumsModel.FindByCategories(gCtx, []string{enums.CategoryEquipmentTypes})
-				if err != nil {
-					return nil, err
-				}
-				res := make([]types.EnumInfo, 0, len(list))
-				for _, item := range list {
-					res = append(res, types.EnumInfo{
-						Category:     item.Category,
-						CategoryName: item.CategoryName,
-						ItemId:       item.ItemId,
-						Value:        item.Value,
-						Name:         item.Name,
-						NameZh:       item.NameZh,
-						Extra:        item.Extra,
-					})
-				}
-				return res, nil
-			})
-			if err != nil {
-				l.Errorf("并发获取箱型字典数据失败: %v", err)
-				return err
-			}
-			if cachedList, ok := data.([]types.EnumInfo); ok {
-				for _, val := range cachedList {
-					if _, exists := equipmentTypeIdsMap[val.ItemId]; exists {
-						valCopy := val
-						equipmentTypesMap[val.ItemId] = &valCopy
-					}
-				}
-			}
-			return nil
-		})
+		g.Go(l.fetchEnumMap(gCtx, enums.CategoryEquipmentTypes, "箱型规格", equipmentTypeIdsMap, equipmentTypesMap))
 	}
 
 	// 6. 并发从本地缓存加载提箱方式字典项详情
 	if len(commercialTermIdsMap) > 0 {
-		g.Go(func() error {
-			data, err := l.svcCtx.EnumsCache.Take(consts.GetEnumsCacheKey(enums.CategoryCommercialTerm), func() (interface{}, error) {
-				list, err := l.svcCtx.EnumsModel.FindByCategories(gCtx, []string{enums.CategoryCommercialTerm})
-				if err != nil {
-					return nil, err
-				}
-				res := make([]types.EnumInfo, 0, len(list))
-				for _, item := range list {
-					res = append(res, types.EnumInfo{
-						Category:     item.Category,
-						CategoryName: item.CategoryName,
-						ItemId:       item.ItemId,
-						Value:        item.Value,
-						Name:         item.Name,
-						NameZh:       item.NameZh,
-						Extra:        item.Extra,
-					})
-				}
-				return res, nil
-			})
-			if err != nil {
-				l.Errorf("并发获取贸易条款字典数据失败: %v", err)
-				return err
-			}
-			if cachedList, ok := data.([]types.EnumInfo); ok {
-				for _, val := range cachedList {
-					if _, exists := commercialTermIdsMap[val.ItemId]; exists {
-						valCopy := val
-						commercialTermsMap[val.ItemId] = &valCopy
-					}
-				}
-			}
-			return nil
-		})
+		g.Go(l.fetchEnumMap(gCtx, enums.CategoryCommercialTerm, "提箱方式", commercialTermIdsMap, commercialTermsMap))
 	}
 
 	// 7. 并发从本地缓存加载箱型大类字典项详情
 	if len(categoryIdsMap) > 0 {
-		g.Go(func() error {
-			data, err := l.svcCtx.EnumsCache.Take(consts.GetEnumsCacheKey(enums.CategoryContainerCategory), func() (interface{}, error) {
-				list, err := l.svcCtx.EnumsModel.FindByCategories(gCtx, []string{enums.CategoryContainerCategory})
-				if err != nil {
-					return nil, err
-				}
-				res := make([]types.EnumInfo, 0, len(list))
-				for _, item := range list {
-					res = append(res, types.EnumInfo{
-						Category:     item.Category,
-						CategoryName: item.CategoryName,
-						ItemId:       item.ItemId,
-						Value:        item.Value,
-						Name:         item.Name,
-						NameZh:       item.NameZh,
-						Extra:        item.Extra,
-					})
-				}
-				return res, nil
-			})
-			if err != nil {
-				l.Errorf("并发获取箱型分类字典数据失败: %v", err)
-				return err
-			}
-			if cachedList, ok := data.([]types.EnumInfo); ok {
-				for _, val := range cachedList {
-					if _, exists := categoryIdsMap[val.ItemId]; exists {
-						valCopy := val
-						categoriesMap[val.ItemId] = &valCopy
-					}
-				}
-			}
-			return nil
-		})
+		g.Go(l.fetchEnumMap(gCtx, enums.CategoryContainerCategory, "箱型分类", categoryIdsMap, categoriesMap))
 	}
 
 	// 等待所有并发协程完成，如果任何协程返回错误，则在这里被捕捉并返回
