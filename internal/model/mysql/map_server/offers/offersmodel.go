@@ -17,11 +17,6 @@ type (
 	customOffersModel struct {
 		*defaultOffersModel
 	}
-
-	LocationCountResult struct {
-		LocationId int64 `db:"location_id"`
-		Count      int64 `db:"count"`
-	}
 )
 
 // NewOffersModel returns a model for the database table.

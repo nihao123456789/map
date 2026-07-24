@@ -6,6 +6,11 @@ import (
 	"strings"
 )
 
+type LocationCountResult struct {
+	LocationId int64 `db:"location_id"`
+	Count      int64 `db:"count"`
+}
+
 type OffersModelCustom interface {
 	// FindByLocationIdAndDirection 根据位置ID列表、交易方向、箱型分类、箱况、颜色、规格箱型、提箱方式和生产年份起步查询买卖交易挂单列表（支持游标分页）
 	FindByLocationIdAndDirection(ctx context.Context, locationIds []int64, direction int64, category int64, condition int64, color string, equipmentType int64, commercialTerm int64, yearOfManufactureRangeFrom int64, lastId int64, limit int64) ([]*Offers, error)
