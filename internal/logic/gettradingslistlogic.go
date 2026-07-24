@@ -116,6 +116,17 @@ func parseEnumItemID(enum *enums.Enums) int64 {
 	return val
 }
 
+// getEnumInfo 辅助从数据字典映射中安全提取指定 ID 对应的字典详情信息指针。
+func getEnumInfo(id int64, enumMap map[string]*types.EnumInfo) *types.EnumInfo {
+	if id <= 0 {
+		return nil
+	}
+	if info, exists := enumMap[strconv.FormatInt(id, 10)]; exists {
+		return info
+	}
+	return nil
+}
+
 // GetTradingsList 获取集装箱交易挂单列表。
 //
 // 参数：
@@ -402,30 +413,10 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 				info.LocationInfo = toLocationInfo(loc)
 			}
 		}
-		if item.Condition.Valid && item.Condition.Int64 > 0 {
-			idStr := strconv.FormatInt(item.Condition.Int64, 10)
-			if cond, exists := conditionsMap[idStr]; exists {
-				info.ConditionInfo = cond
-			}
-		}
-		if item.EquipmentType > 0 {
-			idStr := strconv.FormatInt(item.EquipmentType, 10)
-			if eqType, exists := equipmentTypesMap[idStr]; exists {
-				info.EquipmentTypeInfo = eqType
-			}
-		}
-		if item.CommercialTerm > 0 {
-			idStr := strconv.FormatInt(item.CommercialTerm, 10)
-			if term, exists := commercialTermsMap[idStr]; exists {
-				info.CommercialTermInfo = term
-			}
-		}
-		if item.Category.Valid && item.Category.Int64 > 0 {
-			idStr := strconv.FormatInt(item.Category.Int64, 10)
-			if cat, exists := categoriesMap[idStr]; exists {
-				info.CategoryInfo = cat
-			}
-		}
+		info.ConditionInfo = getEnumInfo(item.Condition.Int64, conditionsMap)
+		info.EquipmentTypeInfo = getEnumInfo(item.EquipmentType, equipmentTypesMap)
+		info.CommercialTermInfo = getEnumInfo(item.CommercialTerm, commercialTermsMap)
+		info.CategoryInfo = getEnumInfo(item.Category.Int64, categoriesMap)
 		offersList = append(offersList, info)
 	}
 
