@@ -6,6 +6,11 @@ import (
 	"strings"
 )
 
+type CompaniesModelCustom interface {
+	// FindByIds 根据多个公司ID批量查询公司详细信息
+	FindByIds(ctx context.Context, ids []int64) ([]*Companies, error)
+}
+
 // FindByIds 根据多个公司ID批量查询公司详细信息（状态正常且未被逻辑删除的数据）。
 // 采用原生批量占位符拼接，避开额外的第三方包依赖和 Rebind 开销。
 //

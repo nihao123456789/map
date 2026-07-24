@@ -6,6 +6,11 @@ import (
 	"strings"
 )
 
+type DepotsModelCustom interface {
+	// FindByIds 批量查询堆场详细信息
+	FindByIds(ctx context.Context, ids []int64) ([]*Depots, error)
+}
+
 // FindByIds 批量查询堆场详细信息
 func (m *customDepotsModel) FindByIds(ctx context.Context, ids []int64) ([]*Depots, error) {
 	if len(ids) == 0 {

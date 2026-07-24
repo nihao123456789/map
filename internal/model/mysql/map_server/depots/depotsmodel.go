@@ -1,8 +1,6 @@
 package depots
 
 import (
-	"context"
-
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
@@ -14,7 +12,7 @@ type (
 	DepotsModel interface {
 		depotsModel
 		withSession(session sqlx.Session) DepotsModel
-		FindByIds(ctx context.Context, ids []int64) ([]*Depots, error)
+		DepotsModelCustom
 	}
 
 	customDepotsModel struct {

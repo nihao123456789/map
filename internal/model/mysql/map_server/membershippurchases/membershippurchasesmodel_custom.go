@@ -6,6 +6,11 @@ import (
 	"strings"
 )
 
+type MembershipPurchasesModelCustom interface {
+	// FindActiveByCompanyIds 批量查询特定公司拥有的所有激活中、且未过期的会员订单
+	FindActiveByCompanyIds(ctx context.Context, companyIds []int64) ([]*MembershipPurchases, error)
+}
+
 // FindActiveByCompanyIds 批量查询特定公司拥有的所有激活中、且未过期的会员订单
 func (m *customMembershipPurchasesModel) FindActiveByCompanyIds(ctx context.Context, companyIds []int64) ([]*MembershipPurchases, error) {
 	if len(companyIds) == 0 {

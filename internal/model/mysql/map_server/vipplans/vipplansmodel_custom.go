@@ -6,6 +6,11 @@ import (
 	"strings"
 )
 
+type VipPlansModelCustom interface {
+	// FindByIds 批量查询会员规格模板
+	FindByIds(ctx context.Context, ids []int64) ([]*VipPlans, error)
+}
+
 // FindByIds 批量查询会员规格模板
 func (m *customVipPlansModel) FindByIds(ctx context.Context, ids []int64) ([]*VipPlans, error) {
 	if len(ids) == 0 {

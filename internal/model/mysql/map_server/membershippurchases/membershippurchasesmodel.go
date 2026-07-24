@@ -1,8 +1,6 @@
 package membershippurchases
 
 import (
-	"context"
-
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
@@ -14,7 +12,7 @@ type (
 	MembershipPurchasesModel interface {
 		membershipPurchasesModel
 		withSession(session sqlx.Session) MembershipPurchasesModel
-		FindActiveByCompanyIds(ctx context.Context, companyIds []int64) ([]*MembershipPurchases, error)
+		MembershipPurchasesModelCustom
 	}
 
 	customMembershipPurchasesModel struct {

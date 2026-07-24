@@ -1,8 +1,6 @@
 package vipplans
 
 import (
-	"context"
-
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
@@ -14,7 +12,7 @@ type (
 	VipPlansModel interface {
 		vipPlansModel
 		withSession(session sqlx.Session) VipPlansModel
-		FindByIds(ctx context.Context, ids []int64) ([]*VipPlans, error)
+		VipPlansModelCustom
 	}
 
 	customVipPlansModel struct {

@@ -1,8 +1,6 @@
 package companies
 
 import (
-	"context"
-
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
@@ -14,8 +12,7 @@ type (
 	CompaniesModel interface {
 		companiesModel
 		withSession(session sqlx.Session) CompaniesModel
-		// FindByIds 根据多个公司ID批量查询公司详细信息
-		FindByIds(ctx context.Context, ids []int64) ([]*Companies, error)
+		CompaniesModelCustom
 	}
 
 	customCompaniesModel struct {
