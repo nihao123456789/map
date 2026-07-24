@@ -470,7 +470,7 @@ func toOfferInfo(item *offers.Offers) types.OfferInfo {
 					Filename:    img.Filename,
 					ContentType: img.ContentType,
 					ByteSize:    img.ByteSize,
-					Url:         "http://api.cgboxx.com/blobs/" + img.SignedId,
+					Url:         consts.BlobUrlPrefix + img.SignedId,
 				})
 			}
 			var docsList []types.DocumentInfo
