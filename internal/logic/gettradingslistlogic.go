@@ -45,7 +45,7 @@ func NewGetTradingsListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *G
 //
 // 返回：响应结果，以及错误信息。
 func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp *types.TradingListResp, err error) {
-	l.Infof("获取交易挂单列表请求: location_id=%d, direction=%s, last_id=%d, page_size=%d", req.LocationId, req.Direction, req.LastId, req.PageSize)
+	l.Infof("获取交易挂单列表请求: location_ids=%v, direction=%s, last_id=%d, page_size=%d", req.LocationIds, req.Direction, req.LastId, req.PageSize)
 	// 根据 direction 映射数据库中的整数 direction 值
 	var dbDirection int64
 	switch req.Direction {
@@ -225,7 +225,7 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 
 	gOffers.Go(func() error {
 		var err error
-		totalCount, err = l.svcCtx.OffersModel.CountByLocationIdAndDirection(gCtxOffers, req.LocationId, dbDirection, dbCategory, dbCondition, dbColor, dbEquipmentType, dbCommercialTerm, int64(req.YearOfManufactureRangeFrom))
+		totalCount, err = l.svcCtx.OffersModel.CountByLocationIdAndDirection(gCtxOffers, req.LocationIds, dbDirection, dbCategory, dbCondition, dbColor, dbEquipmentType, dbCommercialTerm, int64(req.YearOfManufactureRangeFrom))
 		if err != nil {
 			l.Errorf("统计挂单总数失败: %v", err)
 			return err
@@ -235,7 +235,7 @@ func (l *GetTradingsListLogic) GetTradingsList(req *types.TradingListReq) (resp 
 
 	gOffers.Go(func() error {
 		var err error
-		offersData, err = l.svcCtx.OffersModel.FindByLocationIdAndDirection(gCtxOffers, req.LocationId, dbDirection, dbCategory, dbCondition, dbColor, dbEquipmentType, dbCommercialTerm, int64(req.YearOfManufactureRangeFrom), req.LastId, limit)
+		offersData, err = l.svcCtx.OffersModel.FindByLocationIdAndDirection(gCtxOffers, req.LocationIds, dbDirection, dbCategory, dbCondition, dbColor, dbEquipmentType, dbCommercialTerm, int64(req.YearOfManufactureRangeFrom), req.LastId, limit)
 		if err != nil {
 			l.Errorf("查询挂单列表失败: %v", err)
 			return err

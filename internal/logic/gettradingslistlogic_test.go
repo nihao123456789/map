@@ -39,6 +39,7 @@ func TestGetTradingsList_LocationInfo(t *testing.T) {
 	l := logic.NewGetTradingsListLogic(context.Background(), svcCtx)
 
 	req := &types.TradingListReq{
+		LocationIds:                []int64{1000813218, 1000813624},
 		Direction:                  "supply",
 		Category:                   "dry",
 		Condition:                  "brand_new",

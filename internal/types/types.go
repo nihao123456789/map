@@ -164,8 +164,8 @@ type OfferInfo struct {
 }
 
 type TradingListReq struct {
-	LocationId                 int64  `json:"location_id,optional"`
-	Direction                  string `json:"direction"`
+	LocationIds                []int64 `json:"location_ids,optional"`
+	Direction                  string  `json:"direction"`
 	Category                   string `json:"category,optional"`                       // 箱型分类：dry (干箱)，tank (罐箱)
 	Condition                  string `json:"condition,optional"`                      // 箱况：brand_new, excellent, cargo_worthy, wwt, as_is
 	Color                      string `json:"color,optional"`                          // 颜色：如 RAL 1015, RAL 5010 等

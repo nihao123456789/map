@@ -3,10 +3,11 @@ package offers
 import (
 	"context"
 	"fmt"
+	"strings"
 )
 
 // buildWhereAndArgs 拼装查询/统计集装箱交易挂单的公共 WHERE 条件和 SQL 参数
-func (m *customOffersModel) buildWhereAndArgs(locationId int64, direction int64, category int64, condition int64, color string, equipmentType int64, commercialTerm int64, yearOfManufactureRangeFrom int64) (string, []interface{}) {
+func (m *customOffersModel) buildWhereAndArgs(locationIds []int64, direction int64, category int64, condition int64, color string, equipmentType int64, commercialTerm int64, yearOfManufactureRangeFrom int64) (string, []interface{}) {
 	var args []interface{}
 
 	// 基础条件拼接，固定过滤 Trading 挂单、对应方向、已发布 (status=10)、且未过期 (is_expired=0) 并过滤物理删除
@@ -18,10 +19,22 @@ func (m *customOffersModel) buildWhereAndArgs(locationId int64, direction int64,
 	)
 	args = append(args, direction)
 
-	// 如果 locationId > 0，则追加 location_id 条件进行过滤；否则（不传或为0）查询所有位置的挂单数据
-	if locationId > 0 {
-		baseWhere += " and `location_id` = ?"
-		args = append(args, locationId)
+	// 过滤并提取有效的位置 ID 列表
+	var validLocationIds []int64
+	for _, id := range locationIds {
+		if id > 0 {
+			validLocationIds = append(validLocationIds, id)
+		}
+	}
+
+	// 如果 validLocationIds 不为空，则追加 location_id 的 IN 子句进行过滤；否则查询所有位置的挂单数据
+	if len(validLocationIds) > 0 {
+		placeholders := make([]string, len(validLocationIds))
+		for i, id := range validLocationIds {
+			placeholders[i] = "?"
+			args = append(args, id)
+		}
+		baseWhere += fmt.Sprintf(" and `location_id` in (%s)", strings.Join(placeholders, ","))
 	}
 
 	// 如果 category > 0，则追加 category 箱型分类条件进行过滤
@@ -77,8 +90,8 @@ func (m *customOffersModel) buildWhereAndArgs(locationId int64, direction int64,
 // 当 `offers` 表数据量达到数百万、千万量级，为保障多条件过滤及游标排序的高效响应，建议在数据库端执行以下 DDL 创建联合索引：
 // DDL 命令：ALTER TABLE `offers` ADD INDEX `idx_offers_list_cursor` (`location_id`, `direction`, `type`, `status`, `is_expired`, `bumped_at`, `id`);
 // 说明：此索引能完美覆盖 WHERE 核心过滤条件与 ORDER BY 的游标联合排序，使分页扫描开销稳定保持在毫秒级。
-func (m *customOffersModel) FindByLocationIdAndDirection(ctx context.Context, locationId int64, direction int64, category int64, condition int64, color string, equipmentType int64, commercialTerm int64, yearOfManufactureRangeFrom int64, lastId int64, limit int64) ([]*Offers, error) {
-	baseWhere, args := m.buildWhereAndArgs(locationId, direction, category, condition, color, equipmentType, commercialTerm, yearOfManufactureRangeFrom)
+func (m *customOffersModel) FindByLocationIdAndDirection(ctx context.Context, locationIds []int64, direction int64, category int64, condition int64, color string, equipmentType int64, commercialTerm int64, yearOfManufactureRangeFrom int64, lastId int64, limit int64) ([]*Offers, error) {
+	baseWhere, args := m.buildWhereAndArgs(locationIds, direction, category, condition, color, equipmentType, commercialTerm, yearOfManufactureRangeFrom)
 
 	// 游标式分页限制
 	if lastId > 0 {
@@ -102,9 +115,9 @@ func (m *customOffersModel) FindByLocationIdAndDirection(ctx context.Context, lo
 	return resp, nil
 }
 
-// CountByLocationIdAndDirection 根据位置ID、交易方向、箱型分类、箱况、颜色、规格箱型、提箱方式和生产年份起步统计符合条件的交易挂单总数
-func (m *customOffersModel) CountByLocationIdAndDirection(ctx context.Context, locationId int64, direction int64, category int64, condition int64, color string, equipmentType int64, commercialTerm int64, yearOfManufactureRangeFrom int64) (int64, error) {
-	baseWhere, args := m.buildWhereAndArgs(locationId, direction, category, condition, color, equipmentType, commercialTerm, yearOfManufactureRangeFrom)
+// CountByLocationIdAndDirection 根据位置ID列表、交易方向、箱型分类、箱况、颜色、规格箱型、提箱方式和生产年份起步统计符合条件的交易挂单总数
+func (m *customOffersModel) CountByLocationIdAndDirection(ctx context.Context, locationIds []int64, direction int64, category int64, condition int64, color string, equipmentType int64, commercialTerm int64, yearOfManufactureRangeFrom int64) (int64, error) {
+	baseWhere, args := m.buildWhereAndArgs(locationIds, direction, category, condition, color, equipmentType, commercialTerm, yearOfManufactureRangeFrom)
 
 	query := fmt.Sprintf("select count(*) from %s %s", m.table, baseWhere)
 
