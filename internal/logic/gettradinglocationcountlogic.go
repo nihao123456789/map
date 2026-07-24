@@ -5,6 +5,7 @@ import (
 
 	"map-server/internal/svc"
 	"map-server/internal/types"
+	"map-server/internal/model/mysql/map_server/offers"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -27,10 +28,10 @@ func NewGetTradingLocationCountLogic(ctx context.Context, svcCtx *svc.ServiceCon
 
 // GetTradingLocationCount 按位置统计挂单数量的业务逻辑
 func (l *GetTradingLocationCountLogic) GetTradingLocationCount(req *types.TradingLocationCountReq) (resp *types.TradingLocationCountResp, err error) {
-	// 解析 direction 方向：supply -> 0, demand -> 1，非法值默认默认为 0 (supply)
-	var dbDirection int64 = 0
-	if req.Direction == "demand" {
-		dbDirection = 1
+	// 解析 direction 方向：ClientDirectionSupply -> DirectionBuy, ClientDirectionDemand -> DirectionSell，非法值默认默认为 DirectionBuy
+	var dbDirection int64 = offers.DirectionBuy
+	if req.Direction == offers.ClientDirectionDemand {
+		dbDirection = offers.DirectionSell
 	}
 
 	counts, err := l.svcCtx.OffersModel.FindCountGroupByLocationId(l.ctx, dbDirection)
@@ -40,14 +41,14 @@ func (l *GetTradingLocationCountLogic) GetTradingLocationCount(req *types.Tradin
 	}
 
 	// 批量拉取地理位置树节点详情以去重查询，规避 N+1 慢查询瓶颈
-	var locationIDs []int64
+	locationIDs := make([]int64, 0, len(counts))
 	for _, item := range counts {
 		if item.LocationId > 0 {
 			locationIDs = append(locationIDs, item.LocationId)
 		}
 	}
 
-	nodesMap := make(map[int64]*types.LocationInfo)
+	nodesMap := make(map[int64]*types.LocationInfo, len(locationIDs))
 	if len(locationIDs) > 0 {
 		nodesData, err := l.svcCtx.TreeNodesModel.FindByIds(l.ctx, locationIDs)
 		if err != nil {
